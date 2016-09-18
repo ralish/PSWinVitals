@@ -94,7 +94,7 @@ PrivateData = @{
         Tags = @('maintenance')
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/ralish/PSWinVitals/blob/stable/LICENSE'
 
         # A URL to the main website for this project.
         ProjectUri = 'https://github.com/ralish/PSWinVitals'
