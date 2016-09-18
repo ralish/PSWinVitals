@@ -103,7 +103,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = 'https://github.com/ralish/PSWinVitals/blob/stable/CHANGELOG.md'
 
     } # End of PSData hashtable
 
