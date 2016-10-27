@@ -6,7 +6,7 @@ A PowerShell module to consolidate several common system checks, updates & stati
 Requirements
 ------------
 
-- PowerShell 3.0 (or later)
+- PowerShell 5.0 (or later)
 
 Installing
 ----------
