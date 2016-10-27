@@ -8,6 +8,9 @@ Function Get-VitalStatistics {
         [Switch]$ComponentStoreAnalysis,
 
         [Parameter(ParameterSetName='Statistics')]
+        [Switch]$DevicesWithBadStatus,
+
+        [Parameter(ParameterSetName='Statistics')]
         [Switch]$EnvironmentVariables,
 
         [Parameter(ParameterSetName='Statistics')]
@@ -22,6 +25,7 @@ Function Get-VitalStatistics {
 
     if ($PSCmdlet.ParameterSetName -eq 'All') {
         $ComponentStoreAnalysis = $true
+        $DevicesWithBadStatus = $true
         $EnvironmentVariables = $true
         $InstalledFeatures = $true
         $InstalledPrograms = $true
@@ -36,10 +40,16 @@ Function Get-VitalStatistics {
 
     $VitalStatistics = [PSCustomObject]@{
         ComponentStoreAnalysis = $null
+        DevicesWithBadStatus = $null
         EnvironmentVariables = $null
         InstalledFeatures = $null
         InstalledPrograms = $null
         VolumeSummary = $null
+    }
+
+    if ($DevicesWithBadStatus) {
+        Write-Verbose 'Retrieving problematic devices ...'
+        $VitalStatistics.DevicesWithBadStatus = Get-PnpDevice | Where-Object { $_.Status -ne 'OK' }
     }
 
     if ($VolumeSummary) {
