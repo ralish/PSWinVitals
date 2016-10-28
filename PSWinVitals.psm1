@@ -23,7 +23,10 @@ Function Get-VitalStatistics {
         [Switch]$InstalledPrograms,
 
         [Parameter(ParameterSetName='Statistics')]
-        [Switch]$VolumeSummary
+        [Switch]$VolumeSummary,
+
+        [Parameter(ParameterSetName='Statistics')]
+        [Switch]$WindowsUpdates
     )
 
     if ($PSCmdlet.ParameterSetName -eq 'All') {
@@ -34,6 +37,7 @@ Function Get-VitalStatistics {
         $InstalledFeatures = $true
         $InstalledPrograms = $true
         $VolumeSummary = $true
+        $WindowsUpdates = $true
     }
 
     if ($ComponentStoreAnalysis) {
@@ -50,6 +54,7 @@ Function Get-VitalStatistics {
         InstalledFeatures = $null
         InstalledPrograms = $null
         VolumeSummary = $null
+        WindowsUpdates = $null
     }
 
     if ($DevicesWithBadStatus) {
@@ -110,6 +115,15 @@ Function Get-VitalStatistics {
         $VitalStatistics.EnvironmentVariables = $EnvironmentVariables
     }
 
+    if ($WindowsUpdates) {
+        if (!(Get-Module PSWindowsUpdate -ListAvailable)) {
+            Write-Warning 'Unable to retrieve available updates as PSWindowsUpdate module not found.'
+        } else {
+            Write-Verbose 'Retrieving available Windows updates ...'
+            $VitalStatistics.WindowsUpdates = Get-WUList
+        }
+    }
+
     return $VitalStatistics
 }
 
@@ -128,6 +142,9 @@ Function Invoke-VitalChecks {
         [Parameter(ParameterSetName='Checks')]
         [Switch]$ComponentStoreScan,
 
+        [Parameter(ParameterSetName='Checks')]
+        [Switch]$WindowsUpdates,
+
         [Switch]$VerifyOnly
     )
 
@@ -135,6 +152,7 @@ Function Invoke-VitalChecks {
         $ComponentStoreScan = $true
         $FileSystemScans = $true
         $SystemFileChecker = $true
+        $WindowsUpdates = $true
     }
 
     if (!(Test-IsAdministrator)) {
@@ -145,6 +163,7 @@ Function Invoke-VitalChecks {
         ComponentStoreScan = $null
         FileSystemScans = $null
         SystemFileChecker = $null
+        WindowsUpdates = $null
     }
 
     if ($FileSystemScans) {
@@ -168,6 +187,14 @@ Function Invoke-VitalChecks {
             $VitalChecks.ComponentStoreScan = Invoke-DISM -Operation ScanHealth
         } else {
             $VitalChecks.ComponentStoreScan = Invoke-DISM -Operation RestoreHealth
+        }
+    }
+
+    if ($WindowsUpdates) {
+        if ($VerifyOnly) {
+            $VitalChecks.WindowsUpdates = Get-WUInstall -AcceptAll -ListOnly
+        } else {
+            $VitalChecks.WindowsUpdates = Get-WUInstall -AcceptAll -IgnoreReboot
         }
     }
 
