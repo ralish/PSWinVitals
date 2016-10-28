@@ -8,6 +8,9 @@ Function Get-VitalStatistics {
         [Switch]$ComponentStoreAnalysis,
 
         [Parameter(ParameterSetName='Statistics')]
+        [Switch]$CrashDumps,
+
+        [Parameter(ParameterSetName='Statistics')]
         [Switch]$DevicesWithBadStatus,
 
         [Parameter(ParameterSetName='Statistics')]
@@ -25,6 +28,7 @@ Function Get-VitalStatistics {
 
     if ($PSCmdlet.ParameterSetName -eq 'All') {
         $ComponentStoreAnalysis = $true
+        $CrashDumps = $true
         $DevicesWithBadStatus = $true
         $EnvironmentVariables = $true
         $InstalledFeatures = $true
@@ -40,6 +44,7 @@ Function Get-VitalStatistics {
 
     $VitalStatistics = [PSCustomObject]@{
         ComponentStoreAnalysis = $null
+        CrashDumps = $null
         DevicesWithBadStatus = $null
         EnvironmentVariables = $null
         InstalledFeatures = $null
@@ -57,6 +62,21 @@ Function Get-VitalStatistics {
         $VitalStatistics.VolumeSummary = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' }
     }
     
+    if ($CrashDumps) {
+        [PSCustomObject]$CrashDumps = [PSCustomObject]@{
+            Kernel = $null
+            Services = $null
+        }
+
+        Write-Verbose 'Retrieving kernel crash dumps ...'
+        $CrashDumps.Kernel = Get-KernelCrashDumps
+
+        Write-Verbose 'Retrieving service crash dumps ...'
+        $CrashDumps.Services = Get-ServiceCrashDumps
+
+        $VitalStatistics.CrashDumps = $CrashDumps
+    }
+
     if ($ComponentStoreAnalysis) {
         $VitalStatistics.ComponentStoreAnalysis = Invoke-DISM -Operation AnalyzeComponentStore
     }
@@ -229,6 +249,83 @@ Function Get-InstalledPrograms {
     ($_.UninstallString -or $_.NoRemove) }
 
     return $InstalledPrograms
+}
+
+Function Get-KernelCrashDumps {
+    [CmdletBinding()]
+    Param()
+
+    $KernelCrashDumps = [PSCustomObject]@{
+        MemoryDump = $null
+        Minidumps = $null
+    }
+
+    $CrashControlRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl'
+
+    if (!(Test-Path -Path $CrashControlRegPath -PathType Container)) {
+        Write-Warning -Message "The CrashControl key doesn't exist in the Registry so we're guessing dump locations."
+    } else {
+        $CrashControl = Get-ItemProperty -Path $CrashControlRegPath
+
+        if ($CrashControl.DumpFile) {
+            $DumpFile = $CrashControl.DumpFile
+        } else {
+            $DumpFile = "$env:windir\MEMORY.DMP"
+            Write-Warning -Message "The DumpFile value doesn't exist in CrashControl so we're guessing the location."
+        }
+
+        if ($CrashControl.MinidumpDir) {
+            $MinidumpDir = $CrashControl.MinidumpDir
+        } else {
+            $MinidumpDir = "$env:windir\Minidump"
+            Write-Warning -Message "The MinidumpDir value doesn't exist in CrashControl so we're guessing the location."
+        }
+    }
+
+    if (Test-Path -Path $DumpFile -PathType Leaf) {
+        $KernelCrashDumps.MemoryDump = Get-Item -Path $DumpFile
+    }
+
+    if (Test-Path -Path $MinidumpDir -PathType Container) {
+        $KernelCrashDumps.Minidumps = Get-Item -Path "$MinidumpDir\*"
+    }
+
+    return $KernelCrashDumps
+}
+
+Function Get-ServiceCrashDumps {
+    [CmdletBinding()]
+    Param()
+
+    $ServiceCrashDumps = [PSCustomObject]@{
+        LocalSystem = $null
+        LocalService = $null
+        NetworkService = $null
+    }
+
+    $LocalSystemCrashDumpsPath = "$env:windir\System32\Config\SystemProfile\AppData\Local\CrashDumps"
+    $LocalServiceCrashDumpsPath = "$env:windir\ServiceProfiles\LocalService\AppData\Local\CrashDumps"
+    $NetworkServiceCrashDumpsPath = "$env:windir\ServiceProfiles\NetworkService\AppData\Local\CrashDumps"
+
+    if (Test-Path -Path $LocalSystemCrashDumpsPath -PathType Container) {
+        $ServiceCrashDumps.LocalSystem = Get-Item -Path "$LocalSystemCrashDumpsPath\*"
+    } else {
+        Write-Verbose "The crash dumps path doesn't exist for the LocalSystem account."
+    }
+
+    if (Test-Path -Path $LocalServiceCrashDumpsPath -PathType Container) {
+        $ServiceCrashDumps.LocalService = Get-Item -Path "$LocalServiceCrashDumpsPath\*"
+    } else {
+        Write-Verbose "The crash dumps path doesn't exist for the LocalService account."
+    }
+
+    if (Test-Path -Path $NetworkServiceCrashDumpsPath -PathType Container) {
+        $ServiceCrashDumps.NetworkService = Get-Item -Path "$NetworkServiceCrashDumpsPath\*"
+    } else {
+        Write-Verbose "The crash dumps path doesn't exist for the NetworkService account."
+    }
+
+    return $ServiceCrashDumps
 }
 
 Function Invoke-CHKDSK {
