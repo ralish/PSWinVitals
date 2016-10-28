@@ -62,11 +62,11 @@ Function Get-VitalStatistics {
     }
     
     if ($InstalledFeatures) {
-        Write-Verbose 'Retrieving installed features ...'
-        if ($null = Get-Command Get-WindowsFeature -ErrorAction SilentlyContinue) {
-            $VitalStatistics.InstalledFeatures = Get-WindowsFeature | Where-Object { $_.Installed }
+        if (!(Get-Module ServerManager -ListAvailable)) {
+            Write-Warning 'Unable to retrieve installed features as ServerManager module not found.'
         } else {
-            Write-Warning 'Unable to retrieve installed features as Get-WindowsFeature cmdlet not found.'
+            Write-Verbose 'Retrieving installed features ...'
+            $VitalStatistics.InstalledFeatures = Get-WindowsFeature | Where-Object { $_.Installed }
         }
     }
 
