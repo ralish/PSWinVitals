@@ -364,17 +364,23 @@ Function Invoke-CHKDSK {
     $SupportedFileSystems = @('FAT', 'FAT16', 'FAT32', 'NTFS', 'NTFS4', 'NTFS5')
     $Volumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.FileSystem -in $SupportedFileSystems }
 
-    [String[]]$ChkDskResults = $null
+    [PSCustomObject[]]$ChkDskResults = $null
     foreach ($Volume in $Volumes) {
+        $ChkDskResult = [PSCustomObject]@{
+            Output = $null
+            ExitCode = $null
+        }
+
         $VolumePath = $Volume.Path.TrimEnd('\')
         if ($VerifyOnly) {
             Write-Verbose "[CHKDSK] Running verify-only scan on $VolumePath ..."
-            $ChkDskResults += & "$env:windir\System32\chkdsk.exe" "$VolumePath"
+            $ChkDskResult.Output += & "$env:windir\System32\chkdsk.exe" "$VolumePath"
         } else {
             # TODO: Actually run a fix scan optimised based on OS version.
             Write-Verbose "[CHKDSK] Running scan on $VolumePath ..."
-            $ChkDskResults += & "$env:windir\System32\chkdsk.exe" "$VolumePath"
+            $ChkDskResult.Output += & "$env:windir\System32\chkdsk.exe" "$VolumePath"
         }
+        $ChkDskResult.ExitCode = $LASTEXITCODE
 
         switch ($LASTEXITCODE) {
             0       { continue }
@@ -382,6 +388,8 @@ Function Invoke-CHKDSK {
             3       { Write-Warning "[CHKDSK] Volume contains errors: $VolumePath" }
             default { Write-Error "[CHKDSK] Unexpected exit code '$LASTEXITCODE' while scanning volume: $VolumePath" }
         }
+
+        $ChkDskResults += $ChkDskResult
     }
 
     return $ChkDskResults
@@ -394,9 +402,14 @@ Function Invoke-DISM {
         [String]$Operation
     )
 
+    $DismResults = [PSCustomObject]@{
+        Output = $null
+        ExitCode = $null
+    }
 
     Write-Verbose "[DISM] Running $Operation operation ..."
-    $DismResults = & "$env:windir\System32\dism.exe" /Online /Cleanup-Image /$Operation
+    $DismResults.Output = & "$env:windir\System32\dism.exe" /Online /Cleanup-Image /$Operation
+    $DismResults.ExitCode = $LASTEXITCODE
 
     switch ($LASTEXITCODE) {
         0       { continue }
@@ -412,13 +425,19 @@ Function Invoke-SFC {
         [Switch]$VerifyOnly
     )
 
+    $SfcResults = [PSCustomObject]@{
+        Output = $null
+        ExitCode = $null
+    }
+
     if ($VerifyOnly) {
         Write-Verbose '[SFC] Running verify-only scan ...'
-        $SfcResults = & "$env:windir\System32\sfc.exe" /VERIFYONLY
+        $SfcResults.Output = & "$env:windir\System32\sfc.exe" /VERIFYONLY
     } else {
         Write-Verbose '[SFC] Running scan ...'
-        $SfcResults = & "$env:windir\System32\sfc.exe" /SCANNOW
+        $SfcResults.Output = & "$env:windir\System32\sfc.exe" /SCANNOW
     }
+    $SfcResults.ExitCode = $LASTEXITCODE
 
     switch ($LASTEXITCODE) {
         0       { continue }
