@@ -58,12 +58,12 @@ Function Get-VitalStatistics {
     }
 
     if ($DevicesWithBadStatus) {
-        Write-Verbose 'Retrieving problematic devices ...'
+        Write-Verbose -Message 'Retrieving problematic devices ...'
         $VitalStatistics.DevicesWithBadStatus = Get-PnpDevice | Where-Object { $_.Status -ne 'OK' }
     }
 
     if ($VolumeSummary) {
-        Write-Verbose 'Retrieving volume summary ...'
+        Write-Verbose -Message 'Retrieving volume summary ...'
         $VitalStatistics.VolumeSummary = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' }
     }
     
@@ -73,10 +73,10 @@ Function Get-VitalStatistics {
             Services = $null
         }
 
-        Write-Verbose 'Retrieving kernel crash dumps ...'
+        Write-Verbose -Message 'Retrieving kernel crash dumps ...'
         $CrashDumps.Kernel = Get-KernelCrashDumps
 
-        Write-Verbose 'Retrieving service crash dumps ...'
+        Write-Verbose -Message 'Retrieving service crash dumps ...'
         $CrashDumps.Services = Get-ServiceCrashDumps
 
         $VitalStatistics.CrashDumps = $CrashDumps
@@ -87,16 +87,16 @@ Function Get-VitalStatistics {
     }
     
     if ($InstalledFeatures) {
-        if (!(Get-Module ServerManager -ListAvailable)) {
-            Write-Warning 'Unable to retrieve installed features as ServerManager module not found.'
+        if (!(Get-Module -Name ServerManager -ListAvailable)) {
+            Write-Warning -Message 'Unable to retrieve installed features as ServerManager module not found.'
         } else {
-            Write-Verbose 'Retrieving installed features ...'
+            Write-Verbose -Message 'Retrieving installed features ...'
             $VitalStatistics.InstalledFeatures = Get-WindowsFeature | Where-Object { $_.Installed }
         }
     }
 
     if ($InstalledPrograms) {
-        Write-Verbose 'Retrieving installed programs ...'
+        Write-Verbose -Message 'Retrieving installed programs ...'
         $VitalStatistics.InstalledPrograms = Get-InstalledPrograms
     }
 
@@ -106,20 +106,20 @@ Function Get-VitalStatistics {
             User = $null
         }
 
-        Write-Verbose 'Retrieving system environment variables ...'
+        Write-Verbose -Message 'Retrieving system environment variables ...'
         $EnvironmentVariables.Machine = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::Machine)
 
-        Write-Verbose 'Retrieving user environment variables ...'
+        Write-Verbose -Message 'Retrieving user environment variables ...'
         $EnvironmentVariables.User = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::User)
 
         $VitalStatistics.EnvironmentVariables = $EnvironmentVariables
     }
 
     if ($WindowsUpdates) {
-        if (!(Get-Module PSWindowsUpdate -ListAvailable)) {
-            Write-Warning 'Unable to retrieve available updates as PSWindowsUpdate module not found.'
+        if (!(Get-Module -Name PSWindowsUpdate -ListAvailable)) {
+            Write-Warning -Message 'Unable to retrieve available updates as PSWindowsUpdate module not found.'
         } else {
-            Write-Verbose 'Retrieving available Windows updates ...'
+            Write-Verbose -Message 'Retrieving available Windows updates ...'
             $VitalStatistics.WindowsUpdates = Get-WUList
         }
     }
@@ -234,7 +234,7 @@ Function Invoke-VitalUpdates {
     }
 
     if ($PowerShellHelp) {
-        Write-Verbose 'PowerShell: Updating help ...'
+        Write-Verbose -Message 'PowerShell: Updating help ...'
         Update-Help -Force
         $VitalUpdates.PowerShellHelp = $true
     }
@@ -259,15 +259,15 @@ Function Get-InstalledPrograms {
 
     $InstalledPrograms = @(
         # Native applications installed system wide
-        if (Test-Path "HKLM:$NativeRegPath") { Get-ChildItem "HKLM:$NativeRegPath" }
+        if (Test-Path -Path "HKLM:$NativeRegPath") { Get-ChildItem -Path "HKLM:$NativeRegPath" }
         # Native applications installed under the current user
-        if (Test-Path "HKCU:$NativeRegPath") { Get-ChildItem "HKCU:$NativeRegPath" }
+        if (Test-Path -Path "HKCU:$NativeRegPath") { Get-ChildItem -Path "HKCU:$NativeRegPath" }
         # 32-bit applications installed system wide on 64-bit Windows
-        if (Test-Path "HKLM:$Wow6432RegPath") { Get-ChildItem "HKLM:$Wow6432RegPath" }
+        if (Test-Path -Path "HKLM:$Wow6432RegPath") { Get-ChildItem -Path "HKLM:$Wow6432RegPath" }
         # 32-bit applications installed under the current user on 64-bit Windows
-        if (Test-Path "HKCU:$Wow6432RegPath") { Get-ChildItem "HKCU:$Wow6432RegPath" }
+        if (Test-Path -Path "HKCU:$Wow6432RegPath") { Get-ChildItem -Path "HKCU:$Wow6432RegPath" }
     ) | # Get the properties of each uninstall key
-    ForEach-Object { Get-ItemProperty $_.PSPath } |
+    ForEach-Object { Get-ItemProperty -Path $_.PSPath } |
     # Filter out all the uninteresting entries
     Where-Object { $_.DisplayName -and
         !$_.SystemComponent -and
@@ -337,19 +337,19 @@ Function Get-ServiceCrashDumps {
     if (Test-Path -Path $LocalSystemCrashDumpsPath -PathType Container) {
         $ServiceCrashDumps.LocalSystem = Get-Item -Path "$LocalSystemCrashDumpsPath\*"
     } else {
-        Write-Verbose "The crash dumps path doesn't exist for the LocalSystem account."
+        Write-Verbose -Message "The crash dumps path doesn't exist for the LocalSystem account."
     }
 
     if (Test-Path -Path $LocalServiceCrashDumpsPath -PathType Container) {
         $ServiceCrashDumps.LocalService = Get-Item -Path "$LocalServiceCrashDumpsPath\*"
     } else {
-        Write-Verbose "The crash dumps path doesn't exist for the LocalService account."
+        Write-Verbose -Message "The crash dumps path doesn't exist for the LocalService account."
     }
 
     if (Test-Path -Path $NetworkServiceCrashDumpsPath -PathType Container) {
         $ServiceCrashDumps.NetworkService = Get-Item -Path "$NetworkServiceCrashDumpsPath\*"
     } else {
-        Write-Verbose "The crash dumps path doesn't exist for the NetworkService account."
+        Write-Verbose -Message "The crash dumps path doesn't exist for the NetworkService account."
     }
 
     return $ServiceCrashDumps
@@ -373,20 +373,20 @@ Function Invoke-CHKDSK {
 
         $VolumePath = $Volume.Path.TrimEnd('\')
         if ($VerifyOnly) {
-            Write-Verbose "[CHKDSK] Running verify-only scan on $VolumePath ..."
+            Write-Verbose -Message "[CHKDSK] Running verify-only scan on $VolumePath ..."
             $ChkDskResult.Output += & "$env:windir\System32\chkdsk.exe" "$VolumePath"
         } else {
             # TODO: Actually run a fix scan optimised based on OS version.
-            Write-Verbose "[CHKDSK] Running scan on $VolumePath ..."
+            Write-Verbose -Message "[CHKDSK] Running scan on $VolumePath ..."
             $ChkDskResult.Output += & "$env:windir\System32\chkdsk.exe" "$VolumePath"
         }
         $ChkDskResult.ExitCode = $LASTEXITCODE
 
         switch ($LASTEXITCODE) {
             0       { continue }
-            2       { Write-Warning "[CHKDSK]: Volume requires cleanup: $VolumePath" }
-            3       { Write-Warning "[CHKDSK] Volume contains errors: $VolumePath" }
-            default { Write-Error "[CHKDSK] Unexpected exit code '$LASTEXITCODE' while scanning volume: $VolumePath" }
+            2       { Write-Warning -Message "[CHKDSK]: Volume requires cleanup: $VolumePath" }
+            3       { Write-Warning -Message "[CHKDSK] Volume contains errors: $VolumePath" }
+            default { Write-Error -Message "[CHKDSK] Unexpected exit code '$LASTEXITCODE' while scanning volume: $VolumePath" }
         }
 
         $ChkDskResults += $ChkDskResult
@@ -407,13 +407,13 @@ Function Invoke-DISM {
         ExitCode = $null
     }
 
-    Write-Verbose "[DISM] Running $Operation operation ..."
+    Write-Verbose -Message "[DISM] Running $Operation operation ..."
     $DismResults.Output = & "$env:windir\System32\dism.exe" /Online /Cleanup-Image /$Operation
     $DismResults.ExitCode = $LASTEXITCODE
 
     switch ($LASTEXITCODE) {
         0       { continue }
-        default { Write-Error "[DISM] Returned non-zero exit code performing $Operation operation: $LASTEXITCODE" }
+        default { Write-Error -Message "[DISM] Returned non-zero exit code performing $Operation operation: $LASTEXITCODE" }
     }
 
     return $DismResults
@@ -431,17 +431,17 @@ Function Invoke-SFC {
     }
 
     if ($VerifyOnly) {
-        Write-Verbose '[SFC] Running verify-only scan ...'
+        Write-Verbose -Message '[SFC] Running verify-only scan ...'
         $SfcResults.Output = & "$env:windir\System32\sfc.exe" /VERIFYONLY
     } else {
-        Write-Verbose '[SFC] Running scan ...'
+        Write-Verbose -Message '[SFC] Running scan ...'
         $SfcResults.Output = & "$env:windir\System32\sfc.exe" /SCANNOW
     }
     $SfcResults.ExitCode = $LASTEXITCODE
 
     switch ($LASTEXITCODE) {
         0       { continue }
-        default { Write-Error "[SFC] Returned non-zero exit code: $LASTEXITCODE" }
+        default { Write-Error -Message "[SFC] Returned non-zero exit code: $LASTEXITCODE" }
     }
 
     return $SfcResults
@@ -466,16 +466,16 @@ Function Update-Sysinternals {
     $ZipPath  = "$env:TEMP\SysinternalsSuite.zip"
     $DestPath = "${env:ProgramFiles(x86)}\Sysinternals"
 
-    Write-Verbose '[Sysinternals] Retrieving latest version ...'
+    Write-Verbose -Message '[Sysinternals] Retrieving latest version ...'
     Invoke-WebRequest -Uri $SuiteUrl -OutFile $ZipPath
 
-    Write-Verbose '[Sysinternals] Decompressing archive ...'
+    Write-Verbose -Message '[Sysinternals] Decompressing archive ...'
     Remove-Item -Path "$DestPath\*" -Recurse
     Expand-Archive -Path $ZipPath -DestinationPath $DestPath
     Remove-Item -Path $ZipPath
 
-    $Version = (Get-ChildItem $DestPath | Sort-Object -Property LastWriteTime | Select-Object -Last 1).LastWriteTime.ToString('yyyyMMdd')
-    Write-Verbose "[Sysinternals] Installed version $Version."
+    $Version = (Get-ChildItem -Path $DestPath | Sort-Object -Property LastWriteTime | Select-Object -Last 1).LastWriteTime.ToString('yyyyMMdd')
+    Write-Verbose -Message "[Sysinternals] Installed version $Version."
 
     return $Version
 }
