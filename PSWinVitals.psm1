@@ -8,6 +8,9 @@ Function Get-VitalStatistics {
         [Switch]$ComponentStoreAnalysis,
 
         [Parameter(ParameterSetName='Statistics')]
+        [Switch]$ComputerInfo,
+
+        [Parameter(ParameterSetName='Statistics')]
         [Switch]$CrashDumps,
 
         [Parameter(ParameterSetName='Statistics')]
@@ -31,6 +34,7 @@ Function Get-VitalStatistics {
 
     if ($PSCmdlet.ParameterSetName -eq 'All') {
         $ComponentStoreAnalysis = $true
+        $ComputerInfo = $true
         $CrashDumps = $true
         $DevicesWithBadStatus = $true
         $EnvironmentVariables = $true
@@ -48,6 +52,7 @@ Function Get-VitalStatistics {
 
     $VitalStatistics = [PSCustomObject]@{
         ComponentStoreAnalysis = $null
+        ComputerInfo = $null
         CrashDumps = $null
         DevicesWithBadStatus = $null
         EnvironmentVariables = $null
@@ -55,6 +60,11 @@ Function Get-VitalStatistics {
         InstalledPrograms = $null
         VolumeSummary = $null
         WindowsUpdates = $null
+    }
+
+    if ($ComputerInfo) {
+        Write-Verbose -Message 'Retrieving computer info ...'
+        $VitalStatistics.ComputerInfo = Get-ComputerInfo
     }
 
     if ($DevicesWithBadStatus) {
