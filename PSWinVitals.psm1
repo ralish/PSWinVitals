@@ -371,6 +371,7 @@ Function Invoke-CHKDSK {
         [Switch]$VerifyOnly
     )
 
+    # We could use the Repair-Volume cmdlet instead, but it's just a very thin wrapper around CHKDSK anyway...
     $SupportedFileSystems = @('FAT', 'FAT16', 'FAT32', 'NTFS', 'NTFS4', 'NTFS5')
     $Volumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.FileSystem -in $SupportedFileSystems }
 
@@ -386,9 +387,8 @@ Function Invoke-CHKDSK {
             Write-Verbose -Message "[CHKDSK] Running verify-only scan on $VolumePath ..."
             $ChkDskResult.Output += & "$env:windir\System32\chkdsk.exe" "$VolumePath"
         } else {
-            # TODO: Actually run a fix scan optimised based on OS version.
             Write-Verbose -Message "[CHKDSK] Running scan on $VolumePath ..."
-            $ChkDskResult.Output += & "$env:windir\System32\chkdsk.exe" "$VolumePath"
+            $ChkDskResult.Output += & "$env:windir\System32\chkdsk.exe" "$VolumePath" /scan
         }
         $ChkDskResult.ExitCode = $LASTEXITCODE
 
