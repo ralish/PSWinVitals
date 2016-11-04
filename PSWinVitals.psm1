@@ -255,7 +255,11 @@ Function Invoke-VitalMaintenance {
     }
 
     if ($WindowsUpdates) {
-        $VitalMaintenance.WindowsUpdates = Get-WUInstall -AcceptAll -IgnoreReboot
+        if (!(Get-Module -Name PSWindowsUpdate -ListAvailable)) {
+            Write-Warning -Message 'Unable to install missing updates as PSWindowsUpdate module not found.'
+        } else {
+            $VitalMaintenance.WindowsUpdates = Get-WUInstall -AcceptAll -IgnoreReboot
+        }
     }
 
     if ($ComponentStoreCleanup) {
