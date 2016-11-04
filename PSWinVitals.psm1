@@ -234,7 +234,6 @@ Function Invoke-VitalMaintenance {
 
     $VitalMaintenance = [PSCustomObject]@{
         ComponentStoreCleanup = $null
-        PowerShellHelp = $null
         SysinternalsSuite = $null
         WindowsUpdates = $null
     }
@@ -247,7 +246,6 @@ Function Invoke-VitalMaintenance {
     if ($PowerShellHelp) {
         Write-Verbose -Message 'PowerShell: Updating help ...'
         Update-Help -Force
-        $VitalMaintenance.PowerShellHelp = $true
     }
 
     if ($SysinternalsSuite) {
