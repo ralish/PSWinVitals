@@ -208,6 +208,9 @@ Function Invoke-VitalMaintenance {
         [Switch]$ComponentStoreCleanup,
 
         [Parameter(ParameterSetName='Maintenance')]
+        [Switch]$EmptyRecycleBin,
+
+        [Parameter(ParameterSetName='Maintenance')]
         [Switch]$PowerShellHelp,
 
         [Parameter(ParameterSetName='Maintenance')]
@@ -219,6 +222,7 @@ Function Invoke-VitalMaintenance {
 
     if ($PSCmdlet.ParameterSetName -eq 'All') {
         $ComponentStoreCleanup = $true
+        $EmptyRecycleBin = $true
         $PowerShellHelp = $true
         $SysinternalsSuite = $true
         $WindowsUpdates = $true
@@ -233,6 +237,11 @@ Function Invoke-VitalMaintenance {
         PowerShellHelp = $null
         SysinternalsSuite = $null
         WindowsUpdates = $null
+    }
+
+    if ($EmptyRecycleBin) {
+        Write-Verbose -Message 'Emptying Recycle Bin ...'
+        Clear-RecycleBin -Force
     }
 
     if ($PowerShellHelp) {

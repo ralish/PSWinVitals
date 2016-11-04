@@ -8,6 +8,7 @@ Changelog
 - Add support for checking for & installing Windows updates (requires `PSWindowsUpdate` module)
 - Add support for retrieving devices with a status other than 'OK' (**Windows 10/Server 2016 only**)
 - Add support for checking for kernel & service profile crash dumps (`LocalSystem`, `LocalService` & `NetworkService`)
+- Add support for emptying the Recycle Bin (via `Clear-RecycleBin`)
 - Major clean-up of code (stylistic improvements, stop using `Write-Host`, etc...)
 
 ## v0.1
