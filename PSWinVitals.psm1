@@ -244,7 +244,7 @@ Function Invoke-VitalMaintenance {
     }
 
     if ($PowerShellHelp) {
-        Write-Verbose -Message 'PowerShell: Updating help ...'
+        Write-Verbose -Message 'Updating PowerShell help ...'
         Update-Help -Force
     }
 
@@ -256,6 +256,7 @@ Function Invoke-VitalMaintenance {
         if (!(Get-Module -Name PSWindowsUpdate -ListAvailable)) {
             Write-Warning -Message 'Unable to install missing updates as PSWindowsUpdate module not found.'
         } else {
+            Write-Verbose -Message 'Installing missing Windows updates ...'
             $VitalMaintenance.WindowsUpdates = Get-WUInstall -AcceptAll -IgnoreReboot
         }
     }
