@@ -152,9 +152,6 @@ Function Invoke-VitalChecks {
         [Parameter(ParameterSetName='Checks')]
         [Switch]$ComponentStoreScan,
 
-        [Parameter(ParameterSetName='Checks')]
-        [Switch]$WindowsUpdates,
-
         [Switch]$VerifyOnly
     )
 
@@ -162,7 +159,6 @@ Function Invoke-VitalChecks {
         $ComponentStoreScan = $true
         $FileSystemScans = $true
         $SystemFileChecker = $true
-        $WindowsUpdates = $true
     }
 
     if (!(Test-IsAdministrator)) {
@@ -173,7 +169,6 @@ Function Invoke-VitalChecks {
         ComponentStoreScan = $null
         FileSystemScans = $null
         SystemFileChecker = $null
-        WindowsUpdates = $null
     }
 
     if ($FileSystemScans) {
@@ -200,64 +195,65 @@ Function Invoke-VitalChecks {
         }
     }
 
-    if ($WindowsUpdates) {
-        if ($VerifyOnly) {
-            $VitalChecks.WindowsUpdates = Get-WUInstall -AcceptAll -ListOnly
-        } else {
-            $VitalChecks.WindowsUpdates = Get-WUInstall -AcceptAll -IgnoreReboot
-        }
-    }
-
     return $VitalChecks
 }
 
-Function Invoke-VitalUpdates {
-    [CmdletBinding(DefaultParameterSetName='Updates')]
+Function Invoke-VitalMaintenance {
+    [CmdletBinding(DefaultParameterSetName='Maintenance')]
     Param(
         [Parameter(ParameterSetName='All')]
-        [Switch]$AllUpdates,
+        [Switch]$AllMaintenance,
 
-        [Parameter(ParameterSetName='Updates')]
+        [Parameter(ParameterSetName='Maintenance')]
         [Switch]$ComponentStoreCleanup,
 
-        [Parameter(ParameterSetName='Updates')]
+        [Parameter(ParameterSetName='Maintenance')]
         [Switch]$PowerShellHelp,
 
-        [Parameter(ParameterSetName='Updates')]
-        [Switch]$SysinternalsSuite
+        [Parameter(ParameterSetName='Maintenance')]
+        [Switch]$SysinternalsSuite,
+
+        [Parameter(ParameterSetName='Maintenance')]
+        [Switch]$WindowsUpdates
     )
 
     if ($PSCmdlet.ParameterSetName -eq 'All') {
         $ComponentStoreCleanup = $true
         $PowerShellHelp = $true
         $SysinternalsSuite = $true
+        $WindowsUpdates = $true
     }
 
     if (!(Test-IsAdministrator)) {
         throw 'The updates this function performs require administrator privileges.'
     }
 
-    $VitalUpdates = [PSCustomObject]@{
+    $VitalMaintenance = [PSCustomObject]@{
         ComponentStoreCleanup = $null
         PowerShellHelp = $null
         SysinternalsSuite = $null
+        WindowsUpdates = $null
     }
 
     if ($PowerShellHelp) {
         Write-Verbose -Message 'PowerShell: Updating help ...'
         Update-Help -Force
-        $VitalUpdates.PowerShellHelp = $true
+        $VitalMaintenance.PowerShellHelp = $true
     }
 
     if ($SysinternalsSuite) {
-        $VitalUpdates.SysinternalsSuite = Update-Sysinternals
+        $VitalMaintenance.SysinternalsSuite = Update-Sysinternals
+    }
+
+    if ($WindowsUpdates) {
+        $VitalMaintenance.WindowsUpdates = Get-WUInstall -AcceptAll -IgnoreReboot
     }
 
     if ($ComponentStoreCleanup) {
-        $VitalUpdates.ComponentStoreCleanup = Invoke-DISM -Operation StartComponentCleanup
+        $VitalMaintenance.ComponentStoreCleanup = Invoke-DISM -Operation StartComponentCleanup
     }
 
-    return $VitalUpdates
+    return $VitalMaintenance
 }
 
 Function Get-InstalledPrograms {
