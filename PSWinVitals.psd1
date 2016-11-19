@@ -8,7 +8,7 @@
 RootModule = 'PSWinVitals.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.2'
+ModuleVersion = '0.2.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
