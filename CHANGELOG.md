@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## v0.2.1
+
+- Updated the module manifest to reflect renaming of the `Invoke-VitalMaintenance` function
+
 ## v0.2
 
 - Cmdlets now return a suitable `PSCustomObject` with categorised output
