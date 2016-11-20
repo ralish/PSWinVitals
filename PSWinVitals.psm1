@@ -235,6 +235,7 @@ Function Invoke-VitalMaintenance {
     $VitalMaintenance = [PSCustomObject]@{
         ComponentStoreCleanup = $null
         EmptyRecycleBin = $null
+        PowerShellHelp = $null
         SysinternalsSuite = $null
         WindowsUpdates = $null
     }
@@ -258,7 +259,14 @@ Function Invoke-VitalMaintenance {
 
     if ($PowerShellHelp) {
         Write-Verbose -Message 'Updating PowerShell help ...'
-        Update-Help -Force
+        try {
+            Update-Help -Force
+            $VitalMaintenance.PowerShellHelp = $true
+        } catch [System.Exception] {
+            # Almost certainly due to failing to update the Help data for one or more modules, most
+            # likely because the respective module manifests don't define the HelpInfoUri key.
+            $VitalMaintenance.PowerShellHelp = $_.Exception.Message
+        }
     }
 
     if ($SysinternalsSuite) {
