@@ -240,7 +240,16 @@ Function Invoke-VitalMaintenance {
 
     if ($EmptyRecycleBin) {
         Write-Verbose -Message 'Emptying Recycle Bin ...'
-        Clear-RecycleBin -Force
+        try {
+            Clear-RecycleBin -Force
+        } catch [System.ComponentModel.Win32Exception] {
+            # Sometimes clearing the Recycle Bin can fail with an exception that seems to indicate
+            # the Recycle Bin folder doesn't exist. If that happens, we only get a generic E_FAIL
+            # exception, so checking the actual exception message seems to be the best method.
+            if ($_.Exception.Message -ne 'The system cannot find the path specified') {
+                Write-Error -Message $_
+            }
+        }
     }
 
     if ($PowerShellHelp) {
