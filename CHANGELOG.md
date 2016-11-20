@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## v0.2.2
+
+- Improved exception handling for `-EmptyRecycleBin` and `-PowerShellHelp` options of `Invoke-VitalMaintenance`
+
 ## v0.2.1
 
 - Updated the module manifest to reflect renaming of the `Invoke-VitalMaintenance` function
