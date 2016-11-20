@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## v0.2.3
+
+- Fix exception handling changes introduced in previous version to actually trigger the `Catch` block
+
 ## v0.2.2
 
 - Improved exception handling for `-EmptyRecycleBin` and `-PowerShellHelp` options of `Invoke-VitalMaintenance`
