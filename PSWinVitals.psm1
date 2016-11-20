@@ -243,7 +243,7 @@ Function Invoke-VitalMaintenance {
     if ($EmptyRecycleBin) {
         Write-Verbose -Message 'Emptying Recycle Bin ...'
         try {
-            Clear-RecycleBin -Force
+            Clear-RecycleBin -Force -ErrorAction Stop
             $VitalMaintenance.EmptyRecycleBin = $true
         } catch [System.ComponentModel.Win32Exception] {
             # Sometimes clearing the Recycle Bin can fail with an exception that seems to indicate
@@ -260,7 +260,7 @@ Function Invoke-VitalMaintenance {
     if ($PowerShellHelp) {
         Write-Verbose -Message 'Updating PowerShell help ...'
         try {
-            Update-Help -Force
+            Update-Help -Force -ErrorAction Stop
             $VitalMaintenance.PowerShellHelp = $true
         } catch [System.Exception] {
             # Almost certainly due to failing to update the Help data for one or more modules, most
