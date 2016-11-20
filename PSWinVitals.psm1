@@ -234,6 +234,7 @@ Function Invoke-VitalMaintenance {
 
     $VitalMaintenance = [PSCustomObject]@{
         ComponentStoreCleanup = $null
+        EmptyRecycleBin = $null
         SysinternalsSuite = $null
         WindowsUpdates = $null
     }
@@ -242,12 +243,15 @@ Function Invoke-VitalMaintenance {
         Write-Verbose -Message 'Emptying Recycle Bin ...'
         try {
             Clear-RecycleBin -Force
+            $VitalMaintenance.EmptyRecycleBin = $true
         } catch [System.ComponentModel.Win32Exception] {
             # Sometimes clearing the Recycle Bin can fail with an exception that seems to indicate
             # the Recycle Bin folder doesn't exist. If that happens, we only get a generic E_FAIL
             # exception, so checking the actual exception message seems to be the best method.
-            if ($_.Exception.Message -ne 'The system cannot find the path specified') {
-                Write-Error -Message $_
+            if ($_.Exception.Message -eq 'The system cannot find the path specified') {
+                $VitalMaintenance.EmptyRecycleBin = $true
+            } else {
+                $VitalMaintenance.EmptyRecycleBin = $_.Exception.Message
             }
         }
     }
