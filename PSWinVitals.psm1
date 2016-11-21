@@ -537,7 +537,7 @@ Function Update-Sysinternals {
 
     Write-Verbose -Message '[Sysinternals] Decompressing archive ...'
     Remove-Item -Path "$DestinationPath\*" -Recurse
-    Expand-ZipFile -Path $ZipPath -DestinationPath $DestinationPath
+    Expand-ZipFile -ZipPath $ZipPath -DestinationPath $DestinationPath
     Remove-Item -Path $ZipPath
 
     $Version = (Get-ChildItem -Path $DestinationPath | Sort-Object -Property LastWriteTime | Select-Object -Last 1).LastWriteTime.ToString('yyyyMMdd')
