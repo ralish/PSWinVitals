@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## v0.2.8
+
+- Set `PSCustomObject` attributes to `False` to indicate a requested operation didn't run
+
 ## v0.2.7
 
 - Remove assumptions that we're running on 64-bit Windows (should work correctly on 32-bit)
