@@ -254,7 +254,7 @@ Function Invoke-VitalMaintenance {
         try {
             Clear-RecycleBin -Force -ErrorAction Stop
             $VitalMaintenance.EmptyRecycleBin = $true
-        } catch [System.ComponentModel.Win32Exception] {
+        } catch [ComponentModel.Win32Exception] {
             # Sometimes clearing the Recycle Bin can fail with an exception that seems to indicate
             # the Recycle Bin folder doesn't exist. If that happens, we only get a generic E_FAIL
             # exception, so checking the actual exception message seems to be the best method.
@@ -271,7 +271,7 @@ Function Invoke-VitalMaintenance {
         try {
             Update-Help -Force -ErrorAction Stop
             $VitalMaintenance.PowerShellHelp = $true
-        } catch [System.Exception] {
+        } catch {
             # Almost certainly due to failing to update the Help data for one or more modules, most
             # likely because the respective module manifests don't define the HelpInfoUri key.
             $VitalMaintenance.PowerShellHelp = $_.Exception.Message
