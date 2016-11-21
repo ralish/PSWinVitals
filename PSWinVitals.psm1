@@ -524,13 +524,25 @@ Function Test-IsAdministrator {
     return $false
 }
 
+Function Test-IsWindows64bit {
+    if ((Get-WmiObject -Class Win32_OperatingSystem).OSArchitecture -eq '64-bit') {
+        return $true
+    }
+    return $false
+}
+
 Function Update-Sysinternals {
     [CmdletBinding()]
     Param()
 
     $SuiteUrl = 'https://download.sysinternals.com/files/SysinternalsSuite.zip'
     $ZipPath  = "$env:TEMP\SysinternalsSuite.zip"
-    $DestinationPath = "${env:ProgramFiles(x86)}\Sysinternals"
+
+    if (Test-IsWindows64bit) {
+        $DestinationPath = "${env:ProgramFiles(x86)}\Sysinternals"
+    } else {
+        $DestinationPath = "${env:ProgramFiles}\Sysinternals"
+    }
 
     Write-Verbose -Message '[Sysinternals] Retrieving latest version ...'
     Invoke-WebRequest -Uri $SuiteUrl -OutFile $ZipPath
