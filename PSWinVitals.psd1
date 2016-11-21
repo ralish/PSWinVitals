@@ -29,7 +29,7 @@ Copyright = '(c) 2016 Samuel Leslie. All rights reserved.'
 Description = 'Consolidate common system checks, updates & statistics tasks'
 
 # Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '5.0'
+PowerShellVersion = '4.0'
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ''

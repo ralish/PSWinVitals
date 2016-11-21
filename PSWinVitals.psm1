@@ -298,6 +298,24 @@ Function Invoke-VitalMaintenance {
     return $VitalMaintenance
 }
 
+Function Expand-ZipFile {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [String]$ZipPath,
+
+        [Parameter(Mandatory=$true)]
+        [String]$DestinationPath
+    )
+
+    if ($Host.Version.Major -eq 5) {
+        Expand-Archive -Path $ZipPath -DestinationPath $DestinationPath
+    } else {
+        $null = [System.Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $DestinationPath)
+    }
+}
+
 Function Get-InstalledPrograms {
     [CmdletBinding()]
     Param()
@@ -512,17 +530,17 @@ Function Update-Sysinternals {
 
     $SuiteUrl = 'https://download.sysinternals.com/files/SysinternalsSuite.zip'
     $ZipPath  = "$env:TEMP\SysinternalsSuite.zip"
-    $DestPath = "${env:ProgramFiles(x86)}\Sysinternals"
+    $DestinationPath = "${env:ProgramFiles(x86)}\Sysinternals"
 
     Write-Verbose -Message '[Sysinternals] Retrieving latest version ...'
     Invoke-WebRequest -Uri $SuiteUrl -OutFile $ZipPath
 
     Write-Verbose -Message '[Sysinternals] Decompressing archive ...'
-    Remove-Item -Path "$DestPath\*" -Recurse
-    Expand-Archive -Path $ZipPath -DestinationPath $DestPath
+    Remove-Item -Path "$DestinationPath\*" -Recurse
+    Expand-ZipFile -Path $ZipPath -DestinationPath $DestinationPath
     Remove-Item -Path $ZipPath
 
-    $Version = (Get-ChildItem -Path $DestPath | Sort-Object -Property LastWriteTime | Select-Object -Last 1).LastWriteTime.ToString('yyyyMMdd')
+    $Version = (Get-ChildItem -Path $DestinationPath | Sort-Object -Property LastWriteTime | Select-Object -Last 1).LastWriteTime.ToString('yyyyMMdd')
     Write-Verbose -Message "[Sysinternals] Installed version $Version."
 
     return $Version
