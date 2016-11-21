@@ -63,21 +63,21 @@ Function Get-VitalStatistics {
     }
 
     if ($ComputerInfo) {
-        if (Get-Command -Name Get-ComputerInfo -ErrorAction SilentlyContinue) {
-            Write-Verbose -Message 'Retrieving computer info ...'
-            $VitalStatistics.ComputerInfo = Get-ComputerInfo
-        } else {
+        if (!(Get-Command -Name Get-ComputerInfo -ErrorAction SilentlyContinue)) {
             Write-Warning -Message 'Unable to retrieve computer info as the Get-ComputerInfo cmdlet is not available.'
             $VitalStatistics.ComputerInfo = $false
+        } else {
+            Write-Verbose -Message 'Retrieving computer info ...'
+            $VitalStatistics.ComputerInfo = Get-ComputerInfo
         }
     }
 
     if ($DevicesWithBadStatus) {
-        if (Get-Command -Name Get-PnpDevice -ErrorAction SilentlyContinue) {
+        if (!(Get-Command -Name Get-PnpDevice -ErrorAction SilentlyContinue)) {
+            Write-Warning -Message 'Unable to retrieve problematic devices as the Get-PnpDevice cmdlet is not available.'
+        } else {
             Write-Verbose -Message 'Retrieving problematic devices ...'
             $VitalStatistics.DevicesWithBadStatus = Get-PnpDevice | Where-Object { $_.Status -ne 'OK' }
-        } else {
-            Write-Warning -Message 'Unable to retrieve problematic devices as the Get-PnpDevice cmdlet is not available.'
         }
     }
 
@@ -250,7 +250,10 @@ Function Invoke-VitalMaintenance {
     }
 
     if ($EmptyRecycleBin) {
-        if (Get-Command -Name Clear-RecycleBin -ErrorAction SilentlyContinue) {
+        if (!(Get-Command -Name Clear-RecycleBin -ErrorAction SilentlyContinue)) {
+            Write-Warning -Message 'Unable to empty Recycle Bin as the Clear-RecycleBin cmdlet is not available.'
+            $VitalStatistics.EmptyRecycleBin = $false
+        } else {
             Write-Verbose -Message 'Emptying Recycle Bin ...'
             try {
                 Clear-RecycleBin -Force -ErrorAction Stop
@@ -265,9 +268,6 @@ Function Invoke-VitalMaintenance {
                     $VitalMaintenance.EmptyRecycleBin = $_.Exception.Message
                 }
             }
-        } else {
-            Write-Warning -Message 'Unable to empty Recycle Bin as the Clear-RecycleBin cmdlet is not available.'
-            $VitalStatistics.EmptyRecycleBin = $false
         }
     }
 
