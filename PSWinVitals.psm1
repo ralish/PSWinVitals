@@ -75,6 +75,7 @@ Function Get-VitalStatistics {
     if ($DevicesWithBadStatus) {
         if (!(Get-Command -Name Get-PnpDevice -ErrorAction SilentlyContinue)) {
             Write-Warning -Message 'Unable to retrieve problematic devices as the Get-PnpDevice cmdlet is not available.'
+            $VitalStatistics.DevicesWithBadStatus = $false
         } else {
             Write-Verbose -Message 'Retrieving problematic devices ...'
             $VitalStatistics.DevicesWithBadStatus = Get-PnpDevice | Where-Object { $_.Status -ne 'OK' }
@@ -108,6 +109,7 @@ Function Get-VitalStatistics {
     if ($InstalledFeatures) {
         if (!(Get-Module -Name ServerManager -ListAvailable)) {
             Write-Warning -Message 'Unable to retrieve installed features as ServerManager module not found.'
+            $VitalStatistics.InstalledFeatures = $false
         } else {
             Write-Verbose -Message 'Retrieving installed features ...'
             $VitalStatistics.InstalledFeatures = Get-WindowsFeature | Where-Object { $_.Installed }
@@ -137,6 +139,7 @@ Function Get-VitalStatistics {
     if ($WindowsUpdates) {
         if (!(Get-Module -Name PSWindowsUpdate -ListAvailable)) {
             Write-Warning -Message 'Unable to retrieve available updates as PSWindowsUpdate module not found.'
+            $VitalStatistics.WindowsUpdates = $false
         } else {
             Write-Verbose -Message 'Retrieving available Windows updates ...'
             $VitalStatistics.WindowsUpdates = Get-WUList
@@ -290,6 +293,7 @@ Function Invoke-VitalMaintenance {
     if ($WindowsUpdates) {
         if (!(Get-Module -Name PSWindowsUpdate -ListAvailable)) {
             Write-Warning -Message 'Unable to install missing updates as PSWindowsUpdate module not found.'
+            $VitalMaintenance.WindowsUpdates = $false
         } else {
             Write-Verbose -Message 'Installing missing Windows updates ...'
             $VitalMaintenance.WindowsUpdates = Get-WUInstall -AcceptAll -IgnoreReboot
