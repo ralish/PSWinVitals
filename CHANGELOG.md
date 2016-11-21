@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## v0.2.5
+
+- Module now supports *PowerShell 4.0* and newer (previously required *PowerShell 5.0* or newer)
+
 ## v0.2.4
 
 - Test for `Get-ComputerInfo` & `Get-PnpDevice` cmdlets (only available on **Windows 10** or newer)
