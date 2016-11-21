@@ -311,8 +311,8 @@ Function Expand-ZipFile {
     if ($Host.Version.Major -eq 5) {
         Expand-Archive -Path $ZipPath -DestinationPath $DestinationPath
     } else {
-        $null = [System.Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $DestinationPath)
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $DestinationPath)
     }
 }
 
