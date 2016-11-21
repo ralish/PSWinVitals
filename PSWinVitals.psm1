@@ -63,13 +63,22 @@ Function Get-VitalStatistics {
     }
 
     if ($ComputerInfo) {
-        Write-Verbose -Message 'Retrieving computer info ...'
-        $VitalStatistics.ComputerInfo = Get-ComputerInfo
+        if (Get-Command -Name Get-ComputerInfo -ErrorAction SilentlyContinue) {
+            Write-Verbose -Message 'Retrieving computer info ...'
+            $VitalStatistics.ComputerInfo = Get-ComputerInfo
+        } else {
+            Write-Warning -Message 'Unable to retrieve computer info as the Get-ComputerInfo cmdlet is not available.'
+            $VitalStatistics.ComputerInfo = $false
+        }
     }
 
     if ($DevicesWithBadStatus) {
-        Write-Verbose -Message 'Retrieving problematic devices ...'
-        $VitalStatistics.DevicesWithBadStatus = Get-PnpDevice | Where-Object { $_.Status -ne 'OK' }
+        if (Get-Command -Name Get-PnpDevice -ErrorAction SilentlyContinue) {
+            Write-Verbose -Message 'Retrieving problematic devices ...'
+            $VitalStatistics.DevicesWithBadStatus = Get-PnpDevice | Where-Object { $_.Status -ne 'OK' }
+        } else {
+            Write-Warning -Message 'Unable to retrieve problematic devices as the Get-PnpDevice cmdlet is not available.'
+        }
     }
 
     if ($VolumeSummary) {
