@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## v0.2.4
+
+- Test for `Get-ComputerInfo` & `Get-PnpDevice` cmdlets (only available on **Windows 10** or newer)
+
 ## v0.2.3
 
 - Fix exception handling changes introduced in previous version to actually trigger the `Catch` block
