@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## v0.2.6
+
+- Fix a stupid bug due to lack of testing that broke updating the *Sysinternals Suite* files
+
 ## v0.2.5
 
 - Module now supports *PowerShell 4.0* and newer (previously required *PowerShell 5.0* or newer)
