@@ -1,7 +1,7 @@
 PSWinVitals
 ===========
 
-A PowerShell module to consolidate several common system checks, updates & statistics into simple functions.
+A PowerShell module to consolidate common system checks, maintenance tasks & inventory retrieval into simple functions.
 
 Requirements
 ------------

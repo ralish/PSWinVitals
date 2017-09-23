@@ -23,10 +23,10 @@ Author = 'Samuel Leslie'
 # CompanyName = ''
 
 # Copyright statement for this module
-Copyright = '(c) 2016 Samuel Leslie. All rights reserved.'
+Copyright = '(c) Samuel Leslie. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Consolidate common system checks, updates & statistics tasks'
+Description = 'Consolidate common system checks, maintenance tasks & inventory retrieval'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '4.0'
@@ -65,7 +65,7 @@ PowerShellVersion = '4.0'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = @('Get-VitalStatistics', 'Invoke-VitalChecks', 'Invoke-VitalMaintenance')
+FunctionsToExport = @('Get-VitalInformation', 'Invoke-VitalChecks', 'Invoke-VitalMaintenance')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
