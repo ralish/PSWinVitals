@@ -1,3 +1,6 @@
+# See the help for Set-StrictMode for the full details on what this enables.
+Set-StrictMode -Version 2.0
+
 Function Get-VitalInformation {
     [CmdletBinding(DefaultParameterSetName='All')]
     Param(
@@ -442,10 +445,11 @@ Function Get-HypervisorInfo {
         $HypervisorInfo.Vendor = 'Microsoft'
         $HypervisorInfo.Hypervisor = 'Hyper-V'
 
+        $IntegrationServicesVersion = $false
         $VMInfoRegPath = 'HKLM:\Software\Microsoft\Virtual Machine\Auto'
         if (Test-Path -Path $VMInfoRegPath -PathType Container) {
             $VMInfo = Get-ItemProperty -Path $VMInfoRegPath
-            if ($VMInfo.IntegrationServicesVersion) {
+            if ($VMInfo.PSObject.Properties['IntegrationServicesVersion']) {
                 $IntegrationServicesVersion = $VMInfo.IntegrationServicesVersion
             }
         }
@@ -488,20 +492,47 @@ Function Get-InstalledPrograms {
     $InstalledPrograms = @()
     foreach ($UninstallKey in $UninstallKeys) {
         $Program = Get-ItemProperty -Path $UninstallKey.PSPath
-        if ($Program.DisplayName -and
-            !$Program.SystemComponent -and
-            !$Program.ReleaseType -and
-            !$Program.ParentKeyName -and
-            ($Program.UninstallString -or $Program.NoRemove)) {
-            $InstalledPrograms += [PSCustomObject]@{
+        if ($Program.PSObject.Properties['DisplayName'] -and
+            !$Program.PSObject.Properties['SystemComponent'] -and
+            !$Program.PSObject.Properties['ReleaseType'] -and
+            !$Program.PSObject.Properties['ParentKeyName'] -and
+            ($Program.PSObject.Properties['UninstallString'] -or
+             $Program.PSObject.Properties['NoRemove'])) {
+            $InstalledProgram = [PSCustomObject]@{
                 Name = $Program.DisplayName
-                Publisher = $Program.Publisher
-                InstallDate = $Program.InstallDate
-                EstimatedSize = $Program.EstimatedSize
-                Version = $Program.DisplayVersion
-                Location = $Program.InstallLocation
-                Uninstall = $Program.UninstallString
+                Publisher = $null
+                InstallDate = $null
+                EstimatedSize = $null
+                Version = $null
+                Location = $null
+                Uninstall = $null
             }
+
+            if ($Program.PSObject.Properties['Publisher']) {
+                $InstalledProgram.Publisher = $Program.Publisher
+            }
+
+            if ($Program.PSObject.Properties['InstallDate']) {
+                $InstalledProgram.InstallDate = $Program.InstallDate
+            }
+
+            if ($Program.PSObject.Properties['EstimatedSize']) {
+                $InstalledProgram.EstimatedSize = $Program.EstimatedSize
+            }
+
+            if ($Program.PSObject.Properties['DisplayVersion']) {
+                $InstalledProgram.Version = $Program.DisplayVersion
+            }
+
+            if ($Program.PSObject.Properties['InstallLocation']) {
+                $InstalledProgram.Location = $Program.InstallLocation
+            }
+
+            if ($Program.PSObject.Properties['UninstallString']) {
+                $InstalledProgram.Uninstall = $Program.UninstallString
+            }
+
+            $InstalledPrograms += $InstalledProgram
         }
     }
 
@@ -523,14 +554,14 @@ Function Get-KernelCrashDumps {
     if (Test-Path -Path $CrashControlRegPath -PathType Container) {
         $CrashControl = Get-ItemProperty -Path $CrashControlRegPath
 
-        if ($CrashControl.DumpFile) {
+        if ($CrashControl.PSObject.Properties['DumpFile']) {
             $DumpFile = $CrashControl.DumpFile
         } else {
             $DumpFile = Join-Path -Path $env:SystemRoot -ChildPath 'MEMORY.DMP'
             Write-Warning -Message ("[{0}] The DumpFile value doesn't exist in CrashControl so we're guessing the location." -f $LogPrefix)
         }
 
-        if ($CrashControl.MinidumpDir) {
+        if ($CrashControl.PSObject.Properties['MinidumpDir']) {
             $MinidumpDir = $CrashControl.MinidumpDir
         } else {
             $DumpFile = Join-Path -Path $env:SystemRoot -ChildPath 'Minidump'
@@ -720,6 +751,7 @@ Function Update-Sysinternals {
     }
     $Sysinternals.Path = $InstallDir
 
+    $ExistingVersion = $false
     if (Test-Path -Path $InstallDir -PathType Container) {
         $ExistingVersion = (Get-Item -Path $InstallDir).CreationTime.ToString('yyyyMMdd')
     }
