@@ -1,6 +1,24 @@
 Changelog
 =========
 
+## v0.3.0
+
+- Cmdlets now default to running with all options
+- Rename `Get-VitalStatistics` to `Get-VitalInformation`
+- `Get-VitalInformation`: Add `-DevicesNotPresent` to retrieve devices with a status of `UNKNOWN`
+- `Get-VitalInformation`: Add `-HypervisorInfo` to retrieve details on the hypervisor we're running in (if any)
+- `Get-VitalInformation`: Add `-SysinternalsSuite` to retrieve version of Sysinternals Suite that's currently installed
+- `Get-VitalInformation`: Change `-DevicesWithBadStatus` to only retrieves devices with a status of `ERROR` or `DEGRADED`
+- `Get-VitalInformation`: Rename `-VolumeSummary` to `-StorageVolumes`
+- `Get-VitalInformation`: Remove `-AllStatistics` (this is now the default when no other parameters are specified)
+- `Invoke-VitalChecks`: Remove `-AllChecks` (this is now the default when no other parameters are specified)
+- `Invoke-VitalMaintenance`: Add `-ClearInternetExplorerCache` to clear all cached Internet Explorer browser data
+- `Invoke-VitalMaintenance`: Add `-DeleteErrorReports` to clear all error reports for the system & current user
+- `Invoke-VitalMaintenance`: Add `-DeleteTemporaryFiles` to clear all temporary files for the system & current user
+- `Invoke-VitalMaintenance`: Remove `-AllMaintenance` (this is now the default when no other parameters are specified)
+- Enabled Strict Mode set to version 2.0 (latest at time of writing)
+- Major refactoring & clean-up of the codebase to conform to best practices
+
 ## v0.2.8
 
 - Set `PSCustomObject` attributes to `False` to indicate a requested operation didn't run
