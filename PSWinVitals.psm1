@@ -2,46 +2,46 @@
 Set-StrictMode -Version 2.0
 
 Function Get-VitalInformation {
-    [CmdletBinding(DefaultParameterSetName='All')]
+    [CmdletBinding(DefaultParameterSetName='Default')]
     Param(
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$ComponentStoreAnalysis,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$ComputerInfo,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$CrashDumps,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$DevicesNotPresent,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$DevicesWithBadStatus,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$EnvironmentVariables,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$HypervisorInfo,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$InstalledFeatures,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$InstalledPrograms,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$StorageVolumes,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$SysinternalsSuite,
 
-        [Parameter(ParameterSetName='Statistics')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$WindowsUpdates
     )
 
-    if ($PSCmdlet.ParameterSetName -eq 'All') {
+    if ($PSCmdlet.ParameterSetName -eq 'Default') {
         $ComponentStoreAnalysis = $true
         $ComputerInfo = $true
         $CrashDumps = $true
@@ -62,7 +62,7 @@ Function Get-VitalInformation {
         }
     }
 
-    $VitalStatistics = [PSCustomObject]@{
+    $VitalInformation = [PSCustomObject]@{
         ComponentStoreAnalysis = $null
         ComputerInfo = $null
         CrashDumps = $null
@@ -80,41 +80,41 @@ Function Get-VitalInformation {
     if ($ComputerInfo) {
         if (Get-Command -Name Get-ComputerInfo -ErrorAction Ignore) {
             Write-Host -ForegroundColor Green -Object 'Retrieving computer info ...'
-            $VitalStatistics.ComputerInfo = Get-ComputerInfo
+            $VitalInformation.ComputerInfo = Get-ComputerInfo
         } else {
             Write-Warning -Message 'Unable to retrieve computer info as Get-ComputerInfo cmdlet not available.'
-            $VitalStatistics.ComputerInfo = $false
+            $VitalInformation.ComputerInfo = $false
         }
     }
 
     if ($HypervisorInfo) {
         Write-Host -ForegroundColor Green -Object 'Retrieving hypervisor info ...'
-        $VitalStatistics.HypervisorInfo = Get-HypervisorInfo
+        $VitalInformation.HypervisorInfo = Get-HypervisorInfo
     }
 
     if ($DevicesWithBadStatus) {
         if (Get-Module -Name PnpDevice -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving problem devices ...'
-            $VitalStatistics.DevicesWithBadStatus = Get-PnpDevice | Where-Object { $_.Status -in ('Degraded', 'Error') }
+            $VitalInformation.DevicesWithBadStatus = Get-PnpDevice | Where-Object { $_.Status -in ('Degraded', 'Error') }
         } else {
             Write-Warning -Message 'Unable to retrieve problem devices as PnpDevice module not available.'
-            $VitalStatistics.DevicesWithBadStatus = $false
+            $VitalInformation.DevicesWithBadStatus = $false
         }
     }
 
     if ($DevicesNotPresent) {
         if (Get-Module -Name PnpDevice -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving not present devices ...'
-            $VitalStatistics.DevicesNotPresent = Get-PnpDevice | Where-Object { $_.Status -eq 'Unknown' }
+            $VitalInformation.DevicesNotPresent = Get-PnpDevice | Where-Object { $_.Status -eq 'Unknown' }
         } else {
             Write-Warning -Message 'Unable to retrieve not present devices as PnpDevice module not available.'
-            $VitalStatistics.DevicesNotPresent = $false
+            $VitalInformation.DevicesNotPresent = $false
         }
     }
 
     if ($StorageVolumes) {
         Write-Host -ForegroundColor Green -Object 'Retrieving storage volumes summary ...'
-        $VitalStatistics.StorageVolumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' }
+        $VitalInformation.StorageVolumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' }
     }
 
     if ($CrashDumps) {
@@ -129,27 +129,27 @@ Function Get-VitalInformation {
         Write-Host -ForegroundColor Green -Object 'Retrieving service crash dumps ...'
         $CrashDumps.Service = Get-ServiceCrashDumps
 
-        $VitalStatistics.CrashDumps = $CrashDumps
+        $VitalInformation.CrashDumps = $CrashDumps
     }
 
     if ($ComponentStoreAnalysis) {
         Write-Host -ForegroundColor Green -Object 'Running component store analysis ...'
-        $VitalStatistics.ComponentStoreAnalysis = Invoke-DISM -Operation AnalyzeComponentStore
+        $VitalInformation.ComponentStoreAnalysis = Invoke-DISM -Operation AnalyzeComponentStore
     }
 
     if ($InstalledFeatures) {
         if (Get-Module -Name ServerManager -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving installed features ...'
-            $VitalStatistics.InstalledFeatures = Get-WindowsFeature | Where-Object { $_.Installed }
+            $VitalInformation.InstalledFeatures = Get-WindowsFeature | Where-Object { $_.Installed }
         } else {
             Write-Warning -Message 'Unable to retrieve installed features as ServerManager module not available.'
-            $VitalStatistics.InstalledFeatures = $false
+            $VitalInformation.InstalledFeatures = $false
         }
     }
 
     if ($InstalledPrograms) {
         Write-Host -ForegroundColor Green -Object 'Retrieving installed programs ...'
-        $VitalStatistics.InstalledPrograms = Get-InstalledPrograms
+        $VitalInformation.InstalledPrograms = Get-InstalledPrograms
     }
 
     if ($EnvironmentVariables) {
@@ -164,16 +164,16 @@ Function Get-VitalInformation {
         Write-Host -ForegroundColor Green -Object 'Retrieving user environment variables ...'
         $EnvironmentVariables.User = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::User)
 
-        $VitalStatistics.EnvironmentVariables = $EnvironmentVariables
+        $VitalInformation.EnvironmentVariables = $EnvironmentVariables
     }
 
     if ($WindowsUpdates) {
         if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving available Windows updates ...'
-            $VitalStatistics.WindowsUpdates = Get-WUList
+            $VitalInformation.WindowsUpdates = Get-WUList
         } else {
             Write-Warning -Message 'Unable to retrieve available Windows updates as PSWindowsUpdate module not available.'
-            $VitalStatistics.WindowsUpdates = $false
+            $VitalInformation.WindowsUpdates = $false
         }
     }
 
@@ -194,32 +194,32 @@ Function Get-VitalInformation {
 
             $Sysinternals.Path = $InstallDir
             $Sysinternals.Version = (Get-Item -Path $InstallDir).CreationTime.ToString('yyyyMMdd')
-            $VitalStatistics.SysinternalsSuite = $Sysinternals
+            $VitalInformation.SysinternalsSuite = $Sysinternals
         } else {
             Write-Warning -Message 'Unable to retrieve Sysinternals Suite version as it does not appear to be installed.'
-            $VitalStatistics.SysinternalsSuite = $false
+            $VitalInformation.SysinternalsSuite = $false
         }
     }
 
-    return $VitalStatistics
+    return $VitalInformation
 }
 
 Function Invoke-VitalChecks {
-    [CmdletBinding(DefaultParameterSetName='All')]
+    [CmdletBinding(DefaultParameterSetName='Default')]
     Param(
-        [Parameter(ParameterSetName='Checks')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$ComponentStoreScan,
 
-        [Parameter(ParameterSetName='Checks')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$FileSystemScans,
 
-        [Parameter(ParameterSetName='Checks')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$SystemFileChecker,
 
         [Switch]$VerifyOnly
     )
 
-    if ($PSCmdlet.ParameterSetName -eq 'All') {
+    if ($PSCmdlet.ParameterSetName -eq 'Default') {
         $ComponentStoreScan = $true
         $FileSystemScans = $true
         $SystemFileChecker = $true
@@ -266,34 +266,34 @@ Function Invoke-VitalChecks {
 }
 
 Function Invoke-VitalMaintenance {
-    [CmdletBinding(DefaultParameterSetName='All')]
+    [CmdletBinding(DefaultParameterSetName='Default')]
     Param(
-        [Parameter(ParameterSetName='Maintenance')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$ComponentStoreCleanup,
 
-        [Parameter(ParameterSetName='Maintenance')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$ClearInternetExplorerCache,
 
-        [Parameter(ParameterSetName='Maintenance')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$DeleteErrorReports,
 
-        [Parameter(ParameterSetName='Maintenance')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$DeleteTemporaryFiles,
 
-        [Parameter(ParameterSetName='Maintenance')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$EmptyRecycleBin,
 
-        [Parameter(ParameterSetName='Maintenance')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$PowerShellHelp,
 
-        [Parameter(ParameterSetName='Maintenance')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$SysinternalsSuite,
 
-        [Parameter(ParameterSetName='Maintenance')]
+        [Parameter(ParameterSetName='Custom')]
         [Switch]$WindowsUpdates
     )
 
-    if ($PSCmdlet.ParameterSetName -eq 'All') {
+    if ($PSCmdlet.ParameterSetName -eq 'Default') {
         $ClearInternetExplorerCache = $true
         $ComponentStoreCleanup = $true
         $DeleteErrorReports = $true
