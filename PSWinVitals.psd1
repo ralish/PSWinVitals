@@ -26,7 +26,7 @@ Author = 'Samuel Leslie'
 Copyright = '(c) Samuel Leslie. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Consolidate common system checks, maintenance tasks & inventory retrieval'
+Description = 'Consolidate common system health checks, maintenance tasks & inventory retrieval'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '4.0'
@@ -91,7 +91,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('maintenance')
+        Tags = @('maintenance', 'sysadmin')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/ralish/PSWinVitals/blob/stable/LICENSE'
