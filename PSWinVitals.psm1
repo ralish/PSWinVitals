@@ -2,6 +2,100 @@
 Set-StrictMode -Version 2.0
 
 Function Get-VitalInformation {
+    <#
+    .SYNOPSIS
+    Retrieves common system information and inventory
+
+    .DESCRIPTION
+    See the help for each parameter for the specifics of each retrieval task.
+
+    If no parameters are provided then all tasks are run (provided any dependencies are met).
+
+    .PARAMETER ComponentStoreAnalysis
+    Performs a component store analysis to determine current statistics and reclaimable space.
+
+    This parameter requires administrator privileges.
+
+    .PARAMETER ComputerInfo
+    Retrieves baseline system hardware and operating system information.
+
+    This parameter requires Windows PowerShell 5.1 or newer.
+
+    .PARAMETER CrashDumps
+    Checks for any kernel or service account crash dumps.
+
+    .PARAMETER DevicesNotPresent
+    Retrieves any PnP devices which are not present.
+
+    Devices which are not present are those with an "Unknown" state.
+
+    This parameter requires Windows 10, Windows Server 2016, or newer.
+
+    .PARAMETER DevicesWithBadStatus
+    Retrieves any PnP devices with a bad status.
+
+    A bad status corresponds to any device in an "Error" or "Degraded" state.
+
+    This parameter requires Windows 10, Windows Server 2016, or newer.
+
+    .PARAMETER EnvironmentVariables
+    Parameter description
+
+    .PARAMETER HypervisorInfo
+    Attempts to detect if the system is running under a hypervisor.
+
+    Currently we only detect Microsoft Hyper-V and VMware hypervisors.
+
+    .PARAMETER InstalledFeatures
+    Retrieves information on installed Windows features.
+
+    This parameter requires a Window Server operating system.
+
+    .PARAMETER InstalledPrograms
+    Retrieves information on installed programs.
+
+    Only programs installed system-wide are retrieved.
+
+    .PARAMETER StorageVolumes
+    Retrieves information on fixed storage volumes.
+
+    .PARAMETER SysinternalsSuite
+    Retrieves the version of the installed Sysinternals Suite if any.
+
+    The version is calculated as the creation time of the installation folder.
+
+    The location where we check if the utilities are installed depends on the OS architecture:
+    - 32-bit: The "Sysinternals" folder in the "Program Files" directory
+    - 64-bit: The "Sysinternals" folder in the "Program Files (x86)" directory
+
+    .PARAMETER WindowsUpdates
+    Scans for any available Windows updates.
+
+    Updates from Microsoft Update are also included if opted-in via the Windows Update configuration.
+
+    This parameter requires the PSWindowsUpdate module.
+
+    .EXAMPLE
+    Get-VitalInformation -StorageVolumes -InstalledPrograms
+
+    Only retrieves information on storage volumes and installed programs.
+
+    .NOTES
+    Selected inventory information is retrieved in the following order:
+    - ComputerInfo
+    - HypervisorInfo
+    - DevicesWithBadStatus
+    - DevicesNotPresent
+    - StorageVolumes
+    - CrashDumps
+    - ComponentStoreAnalysis
+    - InstalledFeatures
+    - InstalledPrograms
+    - EnvironmentVariables
+    - WindowsUpdates
+    - SysinternalsSuite
+    #>
+
     [CmdletBinding(DefaultParameterSetName='Default')]
     Param(
         [Parameter(ParameterSetName='Custom')]
@@ -205,6 +299,51 @@ Function Get-VitalInformation {
 }
 
 Function Invoke-VitalChecks {
+    <#
+    .SYNOPSIS
+    Performs several common system health checks
+
+    .DESCRIPTION
+    See the help for each parameter for the specifics of each health check.
+
+    If no parameters are provided then all checks are run.
+
+    .PARAMETER ComponentStoreScan
+    Scans the component store and repairs any corruption.
+
+    If the -VerifyOnly parameter is specified then no repairs will be performed.
+
+    This parameter requires administrator privileges.
+
+    .PARAMETER FileSystemScans
+    Scans all non-removable storage volumes with supported file systems and repairs any corruption
+
+    If the -VerifyOnly parameter is specified then no repairs will be performed.
+
+    This parameter requires administrator privileges.
+
+    .PARAMETER SystemFileChecker
+    Scans system files and repairs any corruption.
+
+    If the -VerifyOnoly parameter is specified then no repairs will be performed.
+
+    This parameter requires administrator privileges.
+
+    .PARAMETER VerifyOnly
+    Modifies the behaviour of health checks to not repair any issues.
+
+    .EXAMPLE
+    Invoke-VitalChecks -FileSystemScans -VerifyOnly
+
+    Only runs file system scans without performing any repairs.
+
+    .NOTES
+    Selected health checks are run in the following order:
+    - FileSystemScans
+    - SystemFileChecker
+    - ComponentStoreScan
+    #>
+
     [CmdletBinding(DefaultParameterSetName='Default')]
     Param(
         [Parameter(ParameterSetName='Custom')]
@@ -226,7 +365,7 @@ Function Invoke-VitalChecks {
     }
 
     if (!(Test-IsAdministrator)) {
-        throw 'You must have administrator privileges to perform system checks.'
+        throw 'You must have administrator privileges to perform system health checks.'
     }
 
     $VitalChecks = [PSCustomObject]@{
@@ -266,6 +405,83 @@ Function Invoke-VitalChecks {
 }
 
 Function Invoke-VitalMaintenance {
+    <#
+    .SYNOPSIS
+    Performs several common system maintenance tasks
+
+    .DESCRIPTION
+    See the help for each parameter for the specifics of each maintenance task.
+
+    If no parameters are provided then all tasks are run (provided any dependencies are met).
+
+    .PARAMETER ComponentStoreCleanup
+    Performs a component store clean-up to remove obsolete Windows updates.
+
+    This parameter requires administrator privileges.
+
+    .PARAMETER ClearInternetExplorerCache
+    Clears all cached Internet Explorer data for the user.
+
+    .PARAMETER DeleteErrorReports
+    Deletes all error reports (queued & archived) for the system and user.
+
+    This parameter requires administrator privileges.
+
+    .PARAMETER DeleteTemporaryFiles
+    Recursively deletes all data in the following locations:
+    - The "TEMP" environment variable path for the system
+    - The "TEMP" environment variable path for the user
+
+    This parameter requires administrator privileges.
+
+    .PARAMETER EmptyRecycleBin
+    Empties the Recycle Bin for the user.
+
+    This parameter requires Windows 10, Windows Server 2016, or newer.
+
+    .PARAMETER PowerShellHelp
+    Updates PowerShell help for all modules.
+
+    This parameter requires administrator privileges.
+
+    .PARAMETER SysinternalsSuite
+    Downloads and installs the latest Sysinternals Suite.
+
+    The installation process itself consists of the following steps:
+    - Download the latest Sysinternals Suite archive from download.sysinternals.com
+    - Remove any existing files in the installation directory then decompress the downloaded archive
+    - Add the installation directory to the system path environment variable if it's not already present
+
+    The location where the utilities will be installed depends on the OS architecture:
+    - 32-bit: The "Sysinternals" folder in the "Program Files" directory
+    - 64-bit: The "Sysinternals" folder in the "Program Files (x86)" directory
+
+    This parameter requires administrator privileges.
+
+    .PARAMETER WindowsUpdates
+    Downloads and installs all available Windows updates.
+
+    Updates from Microsoft Update are also included if opted-in via the Windows Update configuration.
+
+    This parameter requires administrator privileges and the PSWindowsUpdate module.
+
+    .EXAMPLE
+    Invoke-VitalMaintenance -WindowsUpdates -SysinternalsSuite
+
+    Only install available Windows updates and the latest Sysinternals utilities.
+
+    .NOTES
+    Selected maintenance tasks are run in the following order:
+    - WindowsUpdates
+    - ComponentStoreCleanup
+    - PowerShellHelp
+    - SysinternalsSuite
+    - ClearInternetExplorerCache
+    - DeleteErrorReports
+    - DeleteTemporaryFiles
+    - EmptyRecycleBin
+    #>
+
     [CmdletBinding(DefaultParameterSetName='Default')]
     Param(
         [Parameter(ParameterSetName='Custom')]
