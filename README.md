@@ -3,6 +3,43 @@ PSWinVitals
 
 A PowerShell module to consolidate common system health checks, maintenance tasks & inventory retrieval.
 
+Usage
+-----
+
+The module exports three functions which handle inventory retrieval, health checks, and maintenance tasks respectively. Each function returns a `PSCustomObject` with the results of the command. A summary of the capabilities of each command follows, however, please consult the built-in help of each function for comprehensive details.
+
+### Get-VitalInformation
+
+- Retrieval of computer & operating system info
+- Retrieval of hypervisor details (if present)
+- Retrieval of hardware devices with errors
+- Retrieval of hardware devices which are absent
+- Retrieval of fixed storage volume details
+- Check for kernel and service account crash dumps
+- Analysis of the Windows component store
+- Retrieval of installed Windows features (Server SKUs only)
+- Retrieval of installed programs
+- Retrieval of environment variables
+- Retrieval of available Windows updates
+- Retrieval of installed Sysinternals version
+
+### Invoke-VitalChecks
+
+- Run file system scans against all fixed volumes
+- Run Windows System File Checker (SFC)
+- Run Windows component store scan
+
+### Invoke-VitalMaintenance
+
+- Install all available Windows updates
+- Perform Windows component store clean-up
+- Update help for all PowerShell modules
+- Install latest Sysinternals Suite tools
+- Clear Internet Explorer cache
+- Delete Windows Error Report files
+- Delete temporary files
+- Empty Recycle Bin
+
 Requirements
 ------------
 
