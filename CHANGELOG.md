@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## v0.3.1
+
+- Add built-in help for all exported functions
+
 ## v0.3.0
 
 - Cmdlets now default to running with all options
