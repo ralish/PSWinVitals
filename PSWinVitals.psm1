@@ -927,12 +927,17 @@ Function Invoke-SFC {
 
     Write-Verbose -Message ('[{0}] Running {1} operation ...' -f $LogPrefix, $Operation.ToLower())
     $SfcPath = Join-Path -Path $env:SystemRoot -ChildPath 'System32\sfc.exe'
+    # SFC output is UTF-16 in contrast to most built-in Windows console applications? We're probably
+    # using ASCII (or similar), so if we don't change this, the text output will be somewhat broken.
+    $DefaultOutputEncoding = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [Text.Encoding]::Unicode
     if ($Operation -eq 'Scan') {
         $SFC.Output = & $SfcPath /SCANNOW
     } else {
         $SFC.Output = & $SfcPath /VERIFYONLY
     }
     $SFC.ExitCode = $LASTEXITCODE
+    [Console]::OutputEncoding = $DefaultOutputEncoding
 
     switch ($SFC.ExitCode) {
         0           { continue }
