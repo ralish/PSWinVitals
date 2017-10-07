@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## v0.3.2
+
+- `Invoke-VitalChecks`: Capture SFC output correctly by using UTF-16 encoding
+- `Invoke-VitalMaintenance`: Use the `TEMP` environment variable directly when deleting the current user's temporary files
+- Minor documentation updates
+
 ## v0.3.1
 
 - Add built-in help for all exported functions
