@@ -610,8 +610,7 @@ Function Invoke-VitalMaintenance {
         Remove-Item -Path "$SystemTemp\*" -Recurse -ErrorAction Ignore
 
         Write-Host -ForegroundColor Green -Object ('Deleting {0} temporary files ...' -f $env:USERNAME)
-        $UserTemp = [Environment]::GetEnvironmentVariable('Temp', [EnvironmentVariableTarget]::User)
-        Remove-Item -Path "$UserTemp\*" -Recurse -ErrorAction Ignore
+        Remove-Item -Path "$env:TEMP\*" -Recurse -ErrorAction Ignore
 
         $VitalMaintenance.DeleteTemporaryFiles = $true
     }
