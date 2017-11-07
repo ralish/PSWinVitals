@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## v0.3.3
+
+- `Get-VitalInformation`: Use the `Version.txt` file for checking the installed Sysinternals Suite version
+- `Invoke-VitalMaintenance`: Create a `Version.txt` file when installing or updating Sysinternals Suite
+
 ## v0.3.2
 
 - `Invoke-VitalChecks`: Capture SFC output correctly by using UTF-16 encoding
