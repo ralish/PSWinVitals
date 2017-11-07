@@ -62,7 +62,7 @@ Function Get-VitalInformation {
     .PARAMETER SysinternalsSuite
     Retrieves the version of the installed Sysinternals Suite if any.
 
-    The version is calculated as the creation time of the installation folder.
+    The version is retrieved from the Version.txt file created by Invoke-VitalMaintenance.
 
     The location where we check if the utilities are installed depends on the OS architecture:
     - 32-bit: The "Sysinternals" folder in the "Program Files" directory
@@ -279,15 +279,22 @@ Function Get-VitalInformation {
         }
 
         if (Test-Path -Path $InstallDir -PathType Container) {
-            Write-Host -ForegroundColor Green -Object 'Retrieving Sysinternals Suite version ...'
             $Sysinternals = [PSCustomObject]@{
                 Path = $null
                 Version = $null
                 Updated = $false
             }
-
             $Sysinternals.Path = $InstallDir
-            $Sysinternals.Version = (Get-Item -Path $InstallDir).CreationTime.ToString('yyyyMMdd')
+
+            Write-Host -ForegroundColor Green -Object 'Retrieving Sysinternals Suite version ...'
+            $VersionFile = Join-Path -Path $InstallDir -ChildPath 'Version.txt'
+            if (Test-Path -Path $VersionFile -PathType Leaf) {
+                $Sysinternals.Version = Get-Content -Path $VersionFile
+            } else {
+                Write-Warning -Message 'Unable to retrieve Sysinternals Suite version as version file is not present.'
+                $Sysinternals.Version = 'Unknown'
+            }
+
             $VitalInformation.SysinternalsSuite = $Sysinternals
         } else {
             Write-Warning -Message 'Unable to retrieve Sysinternals Suite version as it does not appear to be installed.'
@@ -449,7 +456,10 @@ Function Invoke-VitalMaintenance {
 
     The installation process itself consists of the following steps:
     - Download the latest Sysinternals Suite archive from download.sysinternals.com
-    - Remove any existing files in the installation directory then decompress the downloaded archive
+    - Determine the version based off the date of the most recently modified file in the archive
+    - If the downloaded version is newer than the installed version (if any is present) then:
+    | - Remove any existing files in the installation directory and decompress the downloaded archive
+    | - Write a Version.txt file in the installation directory with earlier determined version date
     - Add the installation directory to the system path environment variable if it's not already present
 
     The location where the utilities will be installed depends on the OS architecture:
@@ -972,8 +982,9 @@ Function Update-Sysinternals {
     $Sysinternals.Path = $InstallDir
 
     $ExistingVersion = $false
-    if (Test-Path -Path $InstallDir -PathType Container) {
-        $ExistingVersion = (Get-Item -Path $InstallDir).CreationTime.ToString('yyyyMMdd')
+    $VersionFile = Join-Path -Path $InstallDir -ChildPath 'Version.txt'
+    if (Test-Path -Path $VersionFile -PathType Leaf) {
+        $ExistingVersion = Get-Content -Path $VersionFile
     }
 
     Write-Verbose -Message ('[{0}] Downloading latest version from: {1}' -f $LogPrefix, $DownloadUrl)
@@ -981,10 +992,28 @@ Function Update-Sysinternals {
     $WebClient = New-Object -TypeName Net.WebClient
     $WebClient.DownloadFile($DownloadUrl, $DownloadPath)
 
-    Write-Verbose -Message ('[{0}] Extracting archive to: {1}' -f $LogPrefix, $InstallDir)
-    Remove-Item -Path $InstallDir -Recurse -ErrorAction Ignore
-    Expand-ZipFile -FilePath $DownloadPath -DestinationPath $InstallDir
-    Remove-Item -Path $DownloadPath
+    Write-Verbose -Message ('[{0}] Determining downloaded version ...' -f $LogPrefix)
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $Archive = [IO.Compression.ZipFile]::OpenRead($DownloadPath)
+    $DownloadedVersion = ($Archive.Entries.LastWriteTime | Sort-Object | Select-Object -Last 1).ToString('yyyyMMdd')
+    $Archive.Dispose()
+
+    if (!$ExistingVersion -or ($DownloadedVersion -gt $ExistingVersion)) {
+        Write-Verbose -Message ('[{0}] Extracting archive to: {1}' -f $LogPrefix, $InstallDir)
+        Remove-Item -Path $InstallDir -Recurse -ErrorAction Ignore
+        Expand-ZipFile -FilePath $DownloadPath -DestinationPath $InstallDir
+        Set-Content -Path $VersionFile -Value $DownloadedVersion
+        Remove-Item -Path $DownloadPath
+
+        $Sysinternals.Version = $DownloadedVersion
+        $Sysinternals.Updated = $true
+    } elseif ($DownloadedVersion -eq $ExistingVersion) {
+        Write-Verbose -Message ('[{0}] Not updating as existing version is latest: {1}' -f $LogPrefix, $ExistingVersion)
+        $Sysinternals.Version = $ExistingVersion
+    } else {
+        Write-Warning -Message ('[{0}] Installed version newer than downloaded version: {1}' -f $LogPrefix, $ExistingVersion)
+        $Sysinternals.Version = $ExistingVersion
+    }
 
     $SystemPath = [Environment]::GetEnvironmentVariable('Path', [EnvironmentVariableTarget]::Machine)
     $RegEx = [Regex]::Escape($InstallDir)
@@ -997,12 +1026,6 @@ Function Update-Sysinternals {
         [Environment]::SetEnvironmentVariable('Path', $SystemPath, [EnvironmentVariableTarget]::Machine)
     }
 
-    $Sysinternals.Version = (Get-Item -Path $InstallDir).CreationTime.ToString('yyyyMMdd')
-    if (!$ExistingVersion -or $Sysinternals.Version -ne $ExistingVersion) {
-        $Sysinternals.Updated = $true
-    }
-
-    Write-Verbose -Message ('[{0}] Installed version: {1}' -f $LogPrefix, $Sysinternals.Version)
     return $Sysinternals
 }
 
