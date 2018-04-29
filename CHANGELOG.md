@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.3.4
+------
+
+- Add PSScriptAnalyzer linting configuration
+
 v0.3.3
 ------
 
