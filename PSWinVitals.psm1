@@ -582,7 +582,7 @@ Function Invoke-VitalMaintenance {
             Write-Host -ForegroundColor Green -Object 'Clearing Internet Explorer cache ...'
             # More details on the bitmask here: https://github.com/SeleniumHQ/selenium/blob/master/cpp/iedriver/BrowserFactory.cpp
             $RunDll32Path = Join-Path -Path $env:SystemRoot -ChildPath 'System32\rundll32.exe'
-            & $RunDll32Path inetcpl.cpl,ClearMyTracksByProcess 9FF
+            Start-Process -FilePath $RunDll32Path -ArgumentList @('inetcpl.cpl,ClearMyTracksByProcess', '9FF') -Wait
             $VitalMaintenance.ClearInternetExplorerCache = $true
         } else {
             Write-Warning -Message 'Unable to clear Internet Explorer cache as Control Panel applet not available.'
@@ -661,7 +661,7 @@ Function Get-HypervisorInfo {
         ToolsVersion = $null
     }
 
-    $ComputerSystem = Get-WmiObject -Class Win32_ComputerSystem
+    $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem
     $Manufacturer = $ComputerSystem.Manufacturer
     $Model = $ComputerSystem.Model
 
@@ -721,8 +721,7 @@ Function Get-InstalledPrograms {
             !$Program.PSObject.Properties['SystemComponent'] -and
             !$Program.PSObject.Properties['ReleaseType'] -and
             !$Program.PSObject.Properties['ParentKeyName'] -and
-            ($Program.PSObject.Properties['UninstallString'] -or
-             $Program.PSObject.Properties['NoRemove'])) {
+            ($Program.PSObject.Properties['UninstallString'] -or $Program.PSObject.Properties['NoRemove'])) {
             $InstalledProgram = [PSCustomObject]@{
                 Name = $Program.DisplayName
                 Publisher = $null
@@ -877,10 +876,10 @@ Function Invoke-CHKDSK {
         $CHKDSK.ExitCode = $LASTEXITCODE
 
         switch ($CHKDSK.ExitCode) {
-            0           { continue }
-            2           { Write-Warning -Message ('[{0}] Volume requires cleanup: {1}' -f $LogPrefix, $VolumePath) }
-            3           { Write-Warning -Message ('[{0}] Volume contains errors: {1}' -f $LogPrefix, $VolumePath) }
-            default     { Write-Error -Message ('[{0}] Unexpected exit code: {1}' -f $LogPrefix, $CHKDSK.ExitCode) }
+            0 { continue }
+            2 { Write-Warning -Message ('[{0}] Volume requires cleanup: {1}' -f $LogPrefix, $VolumePath) }
+            3 { Write-Warning -Message ('[{0}] Volume contains errors: {1}' -f $LogPrefix, $VolumePath) }
+            default { Write-Error -Message ('[{0}] Unexpected exit code: {1}' -f $LogPrefix, $CHKDSK.ExitCode) }
         }
 
         $Results += $CHKDSK
@@ -912,9 +911,9 @@ Function Invoke-DISM {
     $DISM.ExitCode = $LASTEXITCODE
 
     switch ($DISM.ExitCode) {
-        0           { continue }
+        0 { continue }
         -2146498554 { Write-Warning -Message ('[{0}] The operation could not be completed due to pending operations.' -f $LogPrefix, $DISM.ExitCode) }
-        default     { Write-Error -Message ('[{0}] Returned non-zero exit code: {1}' -f $LogPrefix, $DISM.ExitCode) }
+        default { Write-Error -Message ('[{0}] Returned non-zero exit code: {1}' -f $LogPrefix, $DISM.ExitCode) }
     }
 
     return $DISM
@@ -949,8 +948,8 @@ Function Invoke-SFC {
     [Console]::OutputEncoding = $DefaultOutputEncoding
 
     switch ($SFC.ExitCode) {
-        0           { continue }
-        default     { Write-Error -Message ('[{0}] Returned non-zero exit code: {1}' -f $LogPrefix, $SFC.ExitCode) }
+        0 { continue }
+        default { Write-Error -Message ('[{0}] Returned non-zero exit code: {1}' -f $LogPrefix, $SFC.ExitCode) }
     }
 
     return $SFC
@@ -1063,7 +1062,7 @@ Function Test-IsWindows64bit {
     [CmdletBinding()]
     Param()
 
-    if ((Get-WmiObject -Class Win32_OperatingSystem).OSArchitecture -eq '64-bit') {
+    if ((Get-CimInstance -ClassName Win32_OperatingSystem).OSArchitecture -eq '64-bit') {
         return $true
     }
     return $false
