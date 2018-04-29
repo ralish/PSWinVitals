@@ -1,22 +1,26 @@
 Changelog
 =========
 
-## v0.3.3
+v0.3.3
+------
 
 - `Get-VitalInformation`: Use the `Version.txt` file for checking the installed Sysinternals Suite version
 - `Invoke-VitalMaintenance`: Create a `Version.txt` file when installing or updating Sysinternals Suite
 
-## v0.3.2
+v0.3.2
+------
 
 - `Invoke-VitalChecks`: Capture SFC output correctly by using UTF-16 encoding
 - `Invoke-VitalMaintenance`: Use the `TEMP` environment variable directly when deleting the current user's temporary files
 - Minor documentation updates
 
-## v0.3.1
+v0.3.1
+------
 
 - Add built-in help for all exported functions
 
-## v0.3.0
+0.3.0
+-----
 
 - Cmdlets now default to running with all options
 - Rename `Get-VitalStatistics` to `Get-VitalInformation`
@@ -34,39 +38,48 @@ Changelog
 - Enabled Strict Mode set to version 2.0 (latest at time of writing)
 - Major refactoring & clean-up of the codebase to conform to best practices
 
-## v0.2.8
+v0.2.8
+------
 
 - Set `PSCustomObject` attributes to `False` to indicate a requested operation didn't run
 
-## v0.2.7
+v0.2.7
+------
 
 - Remove assumptions that we're running on 64-bit Windows (should work correctly on 32-bit)
 
-## v0.2.6
+v0.2.6
+------
 
 - Fix a stupid bug due to lack of testing that broke updating the *Sysinternals Suite* files
 
-## v0.2.5
+v0.2.5
+------
 
 - Module now supports *PowerShell 4.0* and newer (previously required *PowerShell 5.0* or newer)
 
-## v0.2.4
+v0.2.4
+------
 
 - Test for `Get-ComputerInfo` & `Get-PnpDevice` cmdlets (only available on **Windows 10** or newer)
 
-## v0.2.3
+v0.2.3
+------
 
 - Fix exception handling changes introduced in previous version to actually trigger the `Catch` block
 
-## v0.2.2
+v0.2.2
+------
 
 - Improved exception handling for `-EmptyRecycleBin` and `-PowerShellHelp` options of `Invoke-VitalMaintenance`
 
-## v0.2.1
+v0.2.1
+------
 
 - Updated the module manifest to reflect renaming of the `Invoke-VitalMaintenance` function
 
-## v0.2
+v0.2
+----
 
 - Cmdlets now return a suitable `PSCustomObject` with categorised output
 - Add support for retrieving consolidated computer & operating system info (via `Get-ComputerInfo`)
@@ -76,6 +89,7 @@ Changelog
 - Add support for emptying the Recycle Bin (via `Clear-RecycleBin`)
 - Major clean-up of code (stylistic improvements, stop using `Write-Host`, etc...)
 
-## v0.1
+v0.1
+----
 
 - Initial stable release
