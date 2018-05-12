@@ -989,7 +989,12 @@ Function Update-Sysinternals {
     Write-Verbose -Message ('[{0}] Downloading latest version from: {1}' -f $LogPrefix, $DownloadUrl)
     $null = New-Item -Path $DownloadDir -ItemType Directory -ErrorAction Ignore
     $WebClient = New-Object -TypeName Net.WebClient
-    $WebClient.DownloadFile($DownloadUrl, $DownloadPath)
+    try {
+        $WebClient.DownloadFile($DownloadUrl, $DownloadPath)
+    } catch {
+        # Return immediately with the error message if the download fails
+        return $_.Exception.Message
+    }
 
     Write-Verbose -Message ('[{0}] Determining downloaded version ...' -f $LogPrefix)
     Add-Type -AssemblyName System.IO.Compression.FileSystem
