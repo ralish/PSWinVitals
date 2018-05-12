@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.3.5
+------
+
+- Return the exception message and fail immediately if the Sysinternals download fails
+
 v0.3.4
 ------
 
