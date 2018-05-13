@@ -651,6 +651,7 @@ Function Invoke-VitalMaintenance {
 }
 
 Function Get-HypervisorInfo {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '')]
     [CmdletBinding()]
     Param()
 
@@ -956,6 +957,7 @@ Function Invoke-SFC {
 }
 
 Function Update-Sysinternals {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
     [CmdletBinding()]
     Param(
         [ValidatePattern('^http[Ss]?://.*')]
@@ -1054,6 +1056,7 @@ Function Expand-ZipFile {
 
 Function Test-IsAdministrator {
     [CmdletBinding()]
+    [OutputType([Boolean])]
     Param()
 
     $User = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
@@ -1065,6 +1068,7 @@ Function Test-IsAdministrator {
 
 Function Test-IsWindows64bit {
     [CmdletBinding()]
+    [OutputType([Boolean])]
     Param()
 
     if ((Get-CimInstance -ClassName Win32_OperatingSystem).OSArchitecture -eq '64-bit') {
