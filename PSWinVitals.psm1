@@ -94,6 +94,9 @@ Function Get-VitalInformation {
         - EnvironmentVariables
         - WindowsUpdates
         - SysinternalsSuite
+
+        .LINK
+        https://github.com/ralish/PSWinVitals
     #>
 
     [CmdletBinding(DefaultParameterSetName='Default')]
@@ -349,6 +352,9 @@ Function Invoke-VitalChecks {
         - FileSystemScans
         - SystemFileChecker
         - ComponentStoreScan
+
+        .LINK
+        https://github.com/ralish/PSWinVitals
     #>
 
     [CmdletBinding(DefaultParameterSetName='Default')]
@@ -490,6 +496,9 @@ Function Invoke-VitalMaintenance {
         - DeleteErrorReports
         - DeleteTemporaryFiles
         - EmptyRecycleBin
+
+        .LINK
+        https://github.com/ralish/PSWinVitals
     #>
 
     [CmdletBinding(DefaultParameterSetName='Default')]
