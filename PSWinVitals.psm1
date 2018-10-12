@@ -727,11 +727,31 @@ Function Get-InstalledPrograms {
     $InstalledPrograms = @()
     foreach ($UninstallKey in $UninstallKeys) {
         $Program = Get-ItemProperty -Path $UninstallKey.PSPath
-        if ($Program.PSObject.Properties['DisplayName'] -and
-            !$Program.PSObject.Properties['SystemComponent'] -and
-            !$Program.PSObject.Properties['ReleaseType'] -and
-            !$Program.PSObject.Properties['ParentKeyName'] -and
-            ($Program.PSObject.Properties['UninstallString'] -or $Program.PSObject.Properties['NoRemove'])) {
+
+        # Skip any program which doesn't define a display name
+        if ($Program.PSObject.Properties['DisplayName']) {
+            # Ensure the program either:
+            # - Has an uninstall command
+            # - Is marked as non-removable
+            if (!($Program.PSObject.Properties['UninstallString'] -or ($Program.PSObject.Properties['NoRemove'] -and $Program.NoRemove -eq 1))) {
+                continue
+            }
+
+            # Skip any program which defines a parent program
+            if ($Program.PSObject.Properties['ParentKeyName'] -or $Program.PSObject.Properties['ParentDisplayName']) {
+                continue
+            }
+
+            # Skip any program marked as a system component
+            if ($Program.PSObject.Properties['SystemComponent'] -and $Program.SystemComponent -eq 1) {
+                continue
+            }
+
+            # Skip any program which defines a release type
+            if ($Program.PSObject.Properties['ReleaseType']) {
+                continue
+            }
+
             $InstalledProgram = [PSCustomObject]@{
                 Name = $Program.DisplayName
                 Publisher = $null
