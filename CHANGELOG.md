@@ -1,6 +1,15 @@
 Changelog
 =========
 
+v0.3.6
+------
+
+- `Get-VitalInformation`: Check we're running on Windows 8/Server 2012 or newer for storage volumes summary
+- `Invoke-VitalChecks`: Add exFAT to supported file systems for scanning
+- `Invoke-VitalChecks`: Check we're running on Windows 8/Server 2012 or newer for file system scans
+- `Invoke-VitalChecks`: Skip fix operations on FAT volumes due to lack of online repair support
+- Minor documentation updates & miscellaneous code clean-up
+
 v0.3.5
 ------
 
