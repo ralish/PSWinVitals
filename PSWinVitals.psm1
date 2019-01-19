@@ -337,7 +337,7 @@ Function Invoke-VitalChecks {
 
         If the -VerifyOnly parameter is specified then no repairs will be performed.
 
-        This parameter requires administrator privileges.
+        This parameter requires administrator privileges and Windows 8, Windows Server 2012, or newer.
 
         .PARAMETER SystemFileChecker
         Scans system files and repairs any corruption.
@@ -395,11 +395,16 @@ Function Invoke-VitalChecks {
     }
 
     if ($FileSystemScans) {
-        Write-Host -ForegroundColor Green -Object 'Running file system scans ...'
-        if ($VerifyOnly) {
-            $VitalChecks.FileSystemScans = Invoke-CHKDSK -Operation Verify
+        if (Get-Module -Name Storage -ListAvailable) {
+            Write-Host -ForegroundColor Green -Object 'Running file system scans ...'
+            if ($VerifyOnly) {
+                $VitalChecks.FileSystemScans = Invoke-CHKDSK -Operation Verify
+            } else {
+                $VitalChecks.FileSystemScans = Invoke-CHKDSK -Operation Scan
+            }
         } else {
-            $VitalChecks.FileSystemScans = Invoke-CHKDSK -Operation Scan
+            Write-Warning -Message 'Unable to run file system scans as Storage module not available.'
+            $VitalChecks.FileSystemScans = $false
         }
     }
 
