@@ -883,7 +883,7 @@ Function Invoke-CHKDSK {
     # thin wrapper around CHKDSK and only exposes a small subset of its underlying functionality.
     $LogPrefix = 'CHKDSK'
 
-    $SupportedFileSystems = @('FAT', 'FAT16', 'FAT32', 'NTFS', 'NTFS4', 'NTFS5')
+    $SupportedFileSystems = @('exFAT', 'FAT', 'FAT16', 'FAT32', 'NTFS', 'NTFS4', 'NTFS5')
     $Volumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.FileSystem -in $SupportedFileSystems }
 
     [PSCustomObject[]]$Results = $null
