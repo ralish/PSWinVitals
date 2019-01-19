@@ -59,6 +59,8 @@ Function Get-VitalInformation {
         .PARAMETER StorageVolumes
         Retrieves information on fixed storage volumes.
 
+        This parameter requires Windows 8, Windows Server 2012, or newer.
+
         .PARAMETER SysinternalsSuite
         Retrieves the version of the installed Sysinternals Suite if any.
 
@@ -210,8 +212,13 @@ Function Get-VitalInformation {
     }
 
     if ($StorageVolumes) {
-        Write-Host -ForegroundColor Green -Object 'Retrieving storage volumes summary ...'
-        $VitalInformation.StorageVolumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' }
+        if (Get-Module -Name Storage -ListAvailable) {
+            Write-Host -ForegroundColor Green -Object 'Retrieving storage volumes summary ...'
+            $VitalInformation.StorageVolumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' }
+        } else {
+            Write-Warning -Message 'Unable to retrieve storage volumes summary as Storage module not available.'
+            $VitalInformation.StorageVolumes = $false
+        }
     }
 
     if ($CrashDumps) {
