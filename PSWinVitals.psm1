@@ -39,7 +39,7 @@ Function Get-VitalInformation {
         This parameter requires Windows 10, Windows Server 2016, or newer.
 
         .PARAMETER EnvironmentVariables
-        Parameter description
+        Retrieves environment variables for the system and current user.
 
         .PARAMETER HypervisorInfo
         Attempts to detect if the system is running under a hypervisor.
