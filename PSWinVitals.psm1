@@ -333,9 +333,11 @@ Function Invoke-VitalChecks {
         This parameter requires administrator privileges.
 
         .PARAMETER FileSystemScans
-        Scans all non-removable storage volumes with supported file systems and repairs any corruption
+        Scans all non-removable storage volumes with supported file systems and repairs any corruption.
 
         If the -VerifyOnly parameter is specified then no repairs will be performed.
+
+        Volumes using FAT file systems are only supported with -VerifyOnly as they do not support online repair.
 
         This parameter requires administrator privileges and Windows 8, Windows Server 2012, or newer.
 
@@ -895,12 +897,25 @@ Function Invoke-CHKDSK {
     # thin wrapper around CHKDSK and only exposes a small subset of its underlying functionality.
     $LogPrefix = 'CHKDSK'
 
+    # File systems we are able to check for errors (Verify)
     $SupportedFileSystems = @('exFAT', 'FAT', 'FAT16', 'FAT32', 'NTFS', 'NTFS4', 'NTFS5')
+    # File systems we are able to fix any errors (Scan)
+    #
+    # FAT volumes don't support online repair so fixing errors means dismounting the volume. As
+    # CHKDSK has no option equivalent to "dismount only if safe" we don't support fixing errors.
+    $ScanSupportedFileSystems = @('NTFS', 'NTFS4', 'NTFS5')
+
     $Volumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.FileSystem -in $SupportedFileSystems }
 
     [PSCustomObject[]]$Results = $null
     foreach ($Volume in $Volumes) {
         $VolumePath = $Volume.Path.TrimEnd('\')
+
+        if ($Operation -eq 'Scan' -and $Volume.FileSystem -notin $ScanSupportedFileSystems) {
+            Write-Warning -Message ('[{0}] Skipping volume as non-interactive repair of {1} file systems is unsupported: {2}' -f $LogPrefix, $Volume.FileSystem, $VolumePath)
+            continue
+        }
+
         $CHKDSK = [PSCustomObject]@{
             Operation = $Operation
             VolumePath = $VolumePath
