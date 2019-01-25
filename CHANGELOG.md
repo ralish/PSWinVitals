@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.3.7
+------
+
+- `Get-VitalInformation`: Installed programs now include `PSPath` and default to a friendly table view
+
 v0.3.6
 ------
 
