@@ -441,13 +441,13 @@ Function Invoke-VitalMaintenance {
 
         If no parameters are provided then all tasks are run (provided any dependencies are met).
 
+        .PARAMETER ClearInternetExplorerCache
+        Clears all cached Internet Explorer data for the user.
+
         .PARAMETER ComponentStoreCleanup
         Performs a component store clean-up to remove obsolete Windows updates.
 
         This parameter requires administrator privileges.
-
-        .PARAMETER ClearInternetExplorerCache
-        Clears all cached Internet Explorer data for the user.
 
         .PARAMETER DeleteErrorReports
         Deletes all error reports (queued & archived) for the system and user.
