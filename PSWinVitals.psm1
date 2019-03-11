@@ -263,11 +263,16 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['InstalledFeatures']) {
-        if (Get-Module -Name ServerManager -ListAvailable) {
-            Write-Host -ForegroundColor Green -Object 'Retrieving installed features ...'
-            $VitalInformation.InstalledFeatures = Get-WindowsFeature | Where-Object { $_.Installed }
+        if ((Get-WindowsProductType) -gt 1) {
+            if (Get-Module -Name ServerManager -ListAvailable) {
+                Write-Host -ForegroundColor Green -Object 'Retrieving installed features ...'
+                $VitalInformation.InstalledFeatures = Get-WindowsFeature | Where-Object { $_.Installed }
+            } else {
+                Write-Warning -Message 'Unable to retrieve installed features as ServerManager module not available.'
+                $VitalInformation.InstalledFeatures = $false
+            }
         } else {
-            Write-Warning -Message 'Unable to retrieve installed features as ServerManager module not available.'
+            Write-Verbose -Message 'Unable to retrieve installed features as not running on Windows Server.'
             $VitalInformation.InstalledFeatures = $false
         }
     }
@@ -1186,6 +1191,14 @@ Function Expand-ZipFile {
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [IO.Compression.ZipFile]::ExtractToDirectory($FilePath, $DestinationPath)
     }
+}
+
+Function Get-WindowsProductType {
+    [CmdletBinding()]
+    [OutputType([Int])]
+    Param()
+
+    return (Get-CimInstance -ClassName Win32_OperatingSystem).ProductType
 }
 
 Function Test-IsAdministrator {
