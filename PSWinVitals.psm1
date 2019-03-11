@@ -273,10 +273,10 @@ Function Get-VitalInformation {
 
     if ($WindowsUpdates) {
         if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
-            Write-Host -ForegroundColor Green -Object 'Retrieving available Windows updates ...'
-            $VitalInformation.WindowsUpdates = Get-WUList
+            Write-Host -ForegroundColor Green -Object 'Retrieving Windows updates ...'
+            $VitalInformation.WindowsUpdates = Get-WindowsUpdate
         } else {
-            Write-Warning -Message 'Unable to retrieve available Windows updates as PSWindowsUpdate module not available.'
+            Write-Warning -Message 'Unable to retrieve Windows updates as PSWindowsUpdate module not available.'
             $VitalInformation.WindowsUpdates = $false
         }
     }
@@ -498,7 +498,7 @@ Function Invoke-VitalMaintenance {
         .EXAMPLE
         Invoke-VitalMaintenance -WindowsUpdates -SysinternalsSuite
 
-        Only install available Windows updates and the latest Sysinternals utilities.
+        Only install Windows updates and the latest Sysinternals utilities.
 
         .NOTES
         Selected maintenance tasks are run in the following order:
@@ -570,10 +570,10 @@ Function Invoke-VitalMaintenance {
 
     if ($WindowsUpdates) {
         if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
-            Write-Host -ForegroundColor Green -Object 'Installing available Windows updates ...'
-            $VitalMaintenance.WindowsUpdates = Get-WUInstall -AcceptAll -IgnoreReboot
+            Write-Host -ForegroundColor Green -Object 'Installing Windows updates ...'
+            $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll
         } else {
-            Write-Warning -Message 'Unable to install available Windows updates as PSWindowsUpdate module not available.'
+            Write-Warning -Message 'Unable to install Windows updates as PSWindowsUpdate module not available.'
             $VitalMaintenance.WindowsUpdates = $false
         }
     }
