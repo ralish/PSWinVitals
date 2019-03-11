@@ -4,81 +4,86 @@ Set-StrictMode -Version 2.0
 Function Get-VitalInformation {
     <#
         .SYNOPSIS
-        Retrieves common system information and inventory
+        Retrieves system information and inventory
 
         .DESCRIPTION
-        See the help for each parameter for the specifics of each retrieval task.
+        The following tasks are available:
+        - ComponentStoreAnalysis
+          Performs a component store analysis to determine current statistics and reclaimable space.
 
-        If no parameters are provided then all tasks are run (provided any dependencies are met).
+          This task requires administrator privileges.
 
-        .PARAMETER ComponentStoreAnalysis
-        Performs a component store analysis to determine current statistics and reclaimable space.
+        - ComputerInfo
+          Retrieves baseline system hardware and operating system information.
 
-        This parameter requires administrator privileges.
+          This task requires Windows PowerShell 5.1 or newer.
 
-        .PARAMETER ComputerInfo
-        Retrieves baseline system hardware and operating system information.
+        - CrashDumps
+          Checks for any kernel or service account crash dumps.
 
-        This parameter requires Windows PowerShell 5.1 or newer.
+        - DevicesNotPresent
+          Retrieves any PnP devices which are not present.
 
-        .PARAMETER CrashDumps
-        Checks for any kernel or service account crash dumps.
+          Devices which are not present are those with an "Unknown" state.
 
-        .PARAMETER DevicesNotPresent
-        Retrieves any PnP devices which are not present.
+          This task requires Windows 10, Windows Server 2016, or newer.
 
-        Devices which are not present are those with an "Unknown" state.
+        - DevicesWithBadStatus
+          Retrieves any PnP devices with a bad status.
 
-        This parameter requires Windows 10, Windows Server 2016, or newer.
+          A bad status corresponds to any device in an "Error" or "Degraded" state.
 
-        .PARAMETER DevicesWithBadStatus
-        Retrieves any PnP devices with a bad status.
+          This task requires Windows 10, Windows Server 2016, or newer.
 
-        A bad status corresponds to any device in an "Error" or "Degraded" state.
+        - EnvironmentVariables
+          Retrieves environment variables for the system and current user.
 
-        This parameter requires Windows 10, Windows Server 2016, or newer.
+        - HypervisorInfo
+          Attempts to detect if the system is running under a hypervisor.
 
-        .PARAMETER EnvironmentVariables
-        Retrieves environment variables for the system and current user.
+          Currently we only detect Microsoft Hyper-V and VMware hypervisors.
 
-        .PARAMETER HypervisorInfo
-        Attempts to detect if the system is running under a hypervisor.
+        - InstalledFeatures
+          Retrieves information on installed Windows features.
 
-        Currently we only detect Microsoft Hyper-V and VMware hypervisors.
+          This task requires a Window Server operating system.
 
-        .PARAMETER InstalledFeatures
-        Retrieves information on installed Windows features.
+        - InstalledPrograms
+          Retrieves information on installed programs.
 
-        This parameter requires a Window Server operating system.
+          Only programs installed system-wide are retrieved.
 
-        .PARAMETER InstalledPrograms
-        Retrieves information on installed programs.
+        - StorageVolumes
+          Retrieves information on fixed storage volumes.
 
-        Only programs installed system-wide are retrieved.
+          This task requires Windows 8, Windows Server 2012, or newer.
 
-        .PARAMETER StorageVolumes
-        Retrieves information on fixed storage volumes.
+        - SysinternalsSuite
+          Retrieves the version of the installed Sysinternals Suite if any.
 
-        This parameter requires Windows 8, Windows Server 2012, or newer.
+          The version is retrieved from the Version.txt file created by Invoke-VitalMaintenance.
 
-        .PARAMETER SysinternalsSuite
-        Retrieves the version of the installed Sysinternals Suite if any.
+          The location where we check if the utilities are installed depends on the OS architecture:
+          * 32-bit: The "Sysinternals" folder in the "Program Files" directory
+          * 64-bit: The "Sysinternals" folder in the "Program Files (x86)" directory
 
-        The version is retrieved from the Version.txt file created by Invoke-VitalMaintenance.
+        - WindowsUpdates
+          Scans for any available Windows updates.
 
-        The location where we check if the utilities are installed depends on the OS architecture:
-        - 32-bit: The "Sysinternals" folder in the "Program Files" directory
-        - 64-bit: The "Sysinternals" folder in the "Program Files (x86)" directory
+          Updates from Microsoft Update are also included if opted-in via the Windows Update configuration.
 
-        .PARAMETER WindowsUpdates
-        Scans for any available Windows updates.
+          This task requires the PSWindowsUpdate module.
 
-        Updates from Microsoft Update are also included if opted-in via the Windows Update configuration.
+        The default is to run all tasks.
 
-        This parameter requires the PSWindowsUpdate module.
+        .PARAMETER ExcludeTasks
+        Array of tasks to exclude. The default is an empty array (i.e. run all tasks).
+
+        .PARAMETER IncludeTasks
+        Array of tasks to include. At least one task must be specified.
 
         .EXAMPLE
-        Get-VitalInformation -StorageVolumes -InstalledPrograms
+        Get-VitalInformation -IncludeTasks StorageVolumes, InstalledPrograms
 
         Only retrieves information on storage volumes and installed programs.
 
@@ -101,61 +106,75 @@ Function Get-VitalInformation {
         https://github.com/ralish/PSWinVitals
     #>
 
-    [CmdletBinding(DefaultParameterSetName='Default')]
+    [CmdletBinding(DefaultParameterSetName='OptOut')]
     Param(
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$ComponentStoreAnalysis,
+        [Parameter(ParameterSetName='OptOut')]
+        [ValidateSet(
+            'ComponentStoreAnalysis',
+            'ComputerInfo',
+            'CrashDumps',
+            'DevicesNotPresent',
+            'DevicesWithBadStatus',
+            'EnvironmentVariables',
+            'HypervisorInfo',
+            'InstalledFeatures',
+            'InstalledPrograms',
+            'StorageVolumes',
+            'SysinternalsSuite',
+            'WindowsUpdates'
+        )]
+        [String[]]$ExcludeTasks,
 
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$ComputerInfo,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$CrashDumps,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$DevicesNotPresent,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$DevicesWithBadStatus,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$EnvironmentVariables,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$HypervisorInfo,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$InstalledFeatures,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$InstalledPrograms,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$StorageVolumes,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$SysinternalsSuite,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$WindowsUpdates
+        [Parameter(ParameterSetName='OptIn', Mandatory)]
+        [ValidateSet(
+            'ComponentStoreAnalysis',
+            'ComputerInfo',
+            'CrashDumps',
+            'DevicesNotPresent',
+            'DevicesWithBadStatus',
+            'EnvironmentVariables',
+            'HypervisorInfo',
+            'InstalledFeatures',
+            'InstalledPrograms',
+            'StorageVolumes',
+            'SysinternalsSuite',
+            'WindowsUpdates'
+        )]
+        [String[]]$IncludeTasks
     )
 
-    if ($PSCmdlet.ParameterSetName -eq 'Default') {
-        $ComponentStoreAnalysis = $true
-        $ComputerInfo = $true
-        $CrashDumps = $true
-        $DevicesNotPresent = $true
-        $DevicesWithBadStatus = $true
-        $EnvironmentVariables = $true
-        $HypervisorInfo = $true
-        $InstalledFeatures = $true
-        $InstalledPrograms = $true
-        $StorageVolumes = $true
-        $SysinternalsSuite = $true
-        $WindowsUpdates = $true
+    $Tasks = @{
+        ComponentStoreAnalysis = $null
+        ComputerInfo = $null
+        CrashDumps = $null
+        DevicesNotPresent = $null
+        DevicesWithBadStatus = $null
+        EnvironmentVariables = $null
+        HypervisorInfo = $null
+        InstalledFeatures = $null
+        InstalledPrograms = $null
+        StorageVolumes = $null
+        SysinternalsSuite = $null
+        WindowsUpdates = $null
     }
 
-    if ($ComponentStoreAnalysis) {
+    foreach ($Task in @($Tasks.Keys)) {
+        if ($PSCmdlet.ParameterSetName -eq 'OptOut') {
+            if ($ExcludeTasks -contains $Task) {
+                $Tasks[$Task] = $false
+            } else {
+                $Tasks[$Task] = $true
+            }
+        } else {
+            if ($IncludeTasks -contains $Task) {
+                $Tasks[$Task] = $true
+            } else {
+                $Tasks[$Task] = $false
+            }
+        }
+    }
+
+    if ($Tasks['ComponentStoreAnalysis']) {
         if (!(Test-IsAdministrator)) {
             throw 'You must have administrator privileges to analyse the component store.'
         }
@@ -176,7 +195,7 @@ Function Get-VitalInformation {
         WindowsUpdates = $null
     }
 
-    if ($ComputerInfo) {
+    if ($Tasks['ComputerInfo']) {
         if (Get-Command -Name Get-ComputerInfo -ErrorAction Ignore) {
             Write-Host -ForegroundColor Green -Object 'Retrieving computer info ...'
             $VitalInformation.ComputerInfo = Get-ComputerInfo
@@ -186,12 +205,12 @@ Function Get-VitalInformation {
         }
     }
 
-    if ($HypervisorInfo) {
+    if ($Tasks['HypervisorInfo']) {
         Write-Host -ForegroundColor Green -Object 'Retrieving hypervisor info ...'
         $VitalInformation.HypervisorInfo = Get-HypervisorInfo
     }
 
-    if ($DevicesWithBadStatus) {
+    if ($Tasks['DevicesWithBadStatus']) {
         if (Get-Module -Name PnpDevice -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving problem devices ...'
             $VitalInformation.DevicesWithBadStatus = Get-PnpDevice | Where-Object { $_.Status -in ('Degraded', 'Error') }
@@ -201,7 +220,7 @@ Function Get-VitalInformation {
         }
     }
 
-    if ($DevicesNotPresent) {
+    if ($Tasks['DevicesNotPresent']) {
         if (Get-Module -Name PnpDevice -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving not present devices ...'
             $VitalInformation.DevicesNotPresent = Get-PnpDevice | Where-Object { $_.Status -eq 'Unknown' }
@@ -211,7 +230,7 @@ Function Get-VitalInformation {
         }
     }
 
-    if ($StorageVolumes) {
+    if ($Tasks['StorageVolumes']) {
         if (Get-Module -Name Storage -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving storage volumes summary ...'
             $VitalInformation.StorageVolumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' }
@@ -221,7 +240,7 @@ Function Get-VitalInformation {
         }
     }
 
-    if ($CrashDumps) {
+    if ($Tasks['CrashDumps']) {
         [PSCustomObject]$CrashDumps = [PSCustomObject]@{
             Kernel = $null
             Service = $null
@@ -236,12 +255,12 @@ Function Get-VitalInformation {
         $VitalInformation.CrashDumps = $CrashDumps
     }
 
-    if ($ComponentStoreAnalysis) {
+    if ($Tasks['ComponentStoreAnalysis']) {
         Write-Host -ForegroundColor Green -Object 'Running component store analysis ...'
         $VitalInformation.ComponentStoreAnalysis = Invoke-DISM -Operation AnalyzeComponentStore
     }
 
-    if ($InstalledFeatures) {
+    if ($Tasks['InstalledFeatures']) {
         if (Get-Module -Name ServerManager -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving installed features ...'
             $VitalInformation.InstalledFeatures = Get-WindowsFeature | Where-Object { $_.Installed }
@@ -251,12 +270,12 @@ Function Get-VitalInformation {
         }
     }
 
-    if ($InstalledPrograms) {
+    if ($Tasks['InstalledPrograms']) {
         Write-Host -ForegroundColor Green -Object 'Retrieving installed programs ...'
         $VitalInformation.InstalledPrograms = Get-InstalledPrograms
     }
 
-    if ($EnvironmentVariables) {
+    if ($Tasks['EnvironmentVariables']) {
         [PSCustomObject]$EnvironmentVariables = [PSCustomObject]@{
             Machine = $null
             User = $null
@@ -271,7 +290,7 @@ Function Get-VitalInformation {
         $VitalInformation.EnvironmentVariables = $EnvironmentVariables
     }
 
-    if ($WindowsUpdates) {
+    if ($Tasks['WindowsUpdates']) {
         if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving Windows updates ...'
             $VitalInformation.WindowsUpdates = Get-WindowsUpdate
@@ -281,7 +300,7 @@ Function Get-VitalInformation {
         }
     }
 
-    if ($SysinternalsSuite) {
+    if ($Tasks['SysinternalsSuite']) {
         if (Test-IsWindows64bit) {
             $InstallDir = Join-Path -Path ${env:ProgramFiles(x86)} -ChildPath 'Sysinternals'
         } else {
@@ -318,41 +337,46 @@ Function Get-VitalInformation {
 Function Invoke-VitalChecks {
     <#
         .SYNOPSIS
-        Performs several common system health checks
+        Performs system health checks
 
         .DESCRIPTION
-        See the help for each parameter for the specifics of each health check.
+        The following tasks are available:
+        - ComponentStoreScan
+          Scans the component store and repairs any corruption.
 
-        If no parameters are provided then all checks are run.
+          If the -VerifyOnly parameter is specified then no repairs will be performed.
 
-        .PARAMETER ComponentStoreScan
-        Scans the component store and repairs any corruption.
+          This task requires administrator privileges.
 
-        If the -VerifyOnly parameter is specified then no repairs will be performed.
+        - FileSystemScans
+          Scans all non-removable storage volumes with supported file systems and repairs any corruption.
 
-        This parameter requires administrator privileges.
+          If the -VerifyOnly parameter is specified then no repairs will be performed.
 
-        .PARAMETER FileSystemScans
-        Scans all non-removable storage volumes with supported file systems and repairs any corruption.
+          Volumes using FAT file systems are only supported with -VerifyOnly as they do not support online repair.
 
-        If the -VerifyOnly parameter is specified then no repairs will be performed.
+          This task requires administrator privileges and Windows 8, Windows Server 2012, or newer.
 
-        Volumes using FAT file systems are only supported with -VerifyOnly as they do not support online repair.
+        - SystemFileChecker
+          Scans system files and repairs any corruption.
 
-        This parameter requires administrator privileges and Windows 8, Windows Server 2012, or newer.
+          If the -VerifyOnoly parameter is specified then no repairs will be performed.
 
-        .PARAMETER SystemFileChecker
-        Scans system files and repairs any corruption.
+          This task requires administrator privileges.
 
-        If the -VerifyOnoly parameter is specified then no repairs will be performed.
+        The default is to run all tasks.
 
-        This parameter requires administrator privileges.
+        .PARAMETER ExcludeTasks
+        Array of tasks to exclude. The default is an empty array (i.e. run all tasks).
+
+        .PARAMETER IncludeTasks
+        Array of tasks to include. At least one task must be specified.
 
         .PARAMETER VerifyOnly
         Modifies the behaviour of health checks to not repair any issues.
 
         .EXAMPLE
-        Invoke-VitalChecks -FileSystemScans -VerifyOnly
+        Invoke-VitalChecks -IncludeTasks FileSystemScans -VerifyOnly
 
         Only runs file system scans without performing any repairs.
 
@@ -366,16 +390,23 @@ Function Invoke-VitalChecks {
         https://github.com/ralish/PSWinVitals
     #>
 
-    [CmdletBinding(DefaultParameterSetName='Default')]
+    [CmdletBinding(DefaultParameterSetName='OptOut')]
     Param(
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$ComponentStoreScan,
+        [Parameter(ParameterSetName='OptOut')]
+        [ValidateSet(
+            'ComponentStoreScan',
+            'FileSystemScans',
+            'SystemFileChecker'
+        )]
+        [String[]]$ExcludeTasks,
 
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$FileSystemScans,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$SystemFileChecker,
+        [Parameter(ParameterSetName='OptIn', Mandatory)]
+        [ValidateSet(
+            'ComponentStoreScan',
+            'FileSystemScans',
+            'SystemFileChecker'
+        )]
+        [String[]]$IncludeTasks,
 
         [Switch]$VerifyOnly
     )
@@ -384,10 +415,26 @@ Function Invoke-VitalChecks {
         throw 'You must have administrator privileges to perform system health checks.'
     }
 
-    if ($PSCmdlet.ParameterSetName -eq 'Default') {
-        $ComponentStoreScan = $true
-        $FileSystemScans = $true
-        $SystemFileChecker = $true
+    $Tasks = @{
+        ComponentStoreScan = $null
+        FileSystemScans = $null
+        SystemFileChecker = $null
+    }
+
+    foreach ($Task in @($Tasks.Keys)) {
+        if ($PSCmdlet.ParameterSetName -eq 'OptOut') {
+            if ($ExcludeTasks -contains $Task) {
+                $Tasks[$Task] = $false
+            } else {
+                $Tasks[$Task] = $true
+            }
+        } else {
+            if ($IncludeTasks -contains $Task) {
+                $Tasks[$Task] = $true
+            } else {
+                $Tasks[$Task] = $false
+            }
+        }
     }
 
     $VitalChecks = [PSCustomObject]@{
@@ -396,7 +443,7 @@ Function Invoke-VitalChecks {
         SystemFileChecker = $null
     }
 
-    if ($FileSystemScans) {
+    if ($Tasks['FileSystemScans']) {
         if (Get-Module -Name Storage -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Running file system scans ...'
             if ($VerifyOnly) {
@@ -410,7 +457,7 @@ Function Invoke-VitalChecks {
         }
     }
 
-    if ($SystemFileChecker) {
+    if ($Tasks['SystemFileChecker']) {
         Write-Host -ForegroundColor Green -Object 'Running System File Checker ...'
         if ($VerifyOnly) {
             $VitalChecks.SystemFileChecker = Invoke-SFC -Operation Verify
@@ -419,7 +466,7 @@ Function Invoke-VitalChecks {
         }
     }
 
-    if ($ComponentStoreScan) {
+    if ($Tasks['ComponentStoreScan']) {
         Write-Host -ForegroundColor Green -Object 'Running component store scan ...'
         if ($VerifyOnly) {
             $VitalChecks.ComponentStoreScan = Invoke-DISM -Operation ScanHealth
@@ -434,69 +481,68 @@ Function Invoke-VitalChecks {
 Function Invoke-VitalMaintenance {
     <#
         .SYNOPSIS
-        Performs several common system maintenance tasks
+        Performs system maintenance tasks
 
         .DESCRIPTION
-        See the help for each parameter for the specifics of each maintenance task.
+        The following tasks are available:
+        - ClearInternetExplorerCache
+          Clears all cached Internet Explorer data for the user.
 
-        If no parameters are provided then all tasks are run (provided any dependencies are met).
+        - ComponentStoreCleanup
+          Performs a component store clean-up to remove obsolete Windows updates.
 
-        .PARAMETER ClearInternetExplorerCache
-        Clears all cached Internet Explorer data for the user.
+          This task requires administrator privileges.
 
-        .PARAMETER ComponentStoreCleanup
-        Performs a component store clean-up to remove obsolete Windows updates.
+        - DeleteErrorReports
+          Deletes all error reports (queued & archived) for the system and user.
 
-        This parameter requires administrator privileges.
+          This task requires administrator privileges.
 
-        .PARAMETER DeleteErrorReports
-        Deletes all error reports (queued & archived) for the system and user.
+        - DeleteTemporaryFiles
+          Recursively deletes all data in the following locations:
+          * The "TEMP" environment variable path for the system
+          * The "TEMP" environment variable path for the user
 
-        This parameter requires administrator privileges.
+          This task requires administrator privileges.
 
-        .PARAMETER DeleteTemporaryFiles
-        Recursively deletes all data in the following locations:
-        - The "TEMP" environment variable path for the system
-        - The "TEMP" environment variable path for the user
+        - EmptyRecycleBin
+          Empties the Recycle Bin for the user.
 
-        This parameter requires administrator privileges.
+          This task requires Windows 10, Windows Server 2016, or newer.
 
-        .PARAMETER EmptyRecycleBin
-        Empties the Recycle Bin for the user.
+        - PowerShellHelp
+          Updates PowerShell help for all modules.
 
-        This parameter requires Windows 10, Windows Server 2016, or newer.
+          This task requires administrator privileges.
 
-        .PARAMETER PowerShellHelp
-        Updates PowerShell help for all modules.
+        - SysinternalsSuite
+          Downloads and installs the latest Sysinternals Suite.
 
-        This parameter requires administrator privileges.
+          The installation process itself consists of the following steps:
+          * Download the latest Sysinternals Suite archive from download.sysinternals.com
+          * Determine the version based off the date of the most recently modified file in the archive
+          * If the downloaded version is newer than the installed version (if any is present) then:
+          | * Remove any existing files in the installation directory and decompress the downloaded archive
+          | * Write a Version.txt file in the installation directory with earlier determined version date
+          * Add the installation directory to the system path environment variable if it's not already present
 
-        .PARAMETER SysinternalsSuite
-        Downloads and installs the latest Sysinternals Suite.
+          The location where the utilities will be installed depends on the OS architecture:
+          * 32-bit: The "Sysinternals" folder in the "Program Files" directory
+          * 64-bit: The "Sysinternals" folder in the "Program Files (x86)" directory
 
-        The installation process itself consists of the following steps:
-        - Download the latest Sysinternals Suite archive from download.sysinternals.com
-        - Determine the version based off the date of the most recently modified file in the archive
-        - If the downloaded version is newer than the installed version (if any is present) then:
-        | - Remove any existing files in the installation directory and decompress the downloaded archive
-        | - Write a Version.txt file in the installation directory with earlier determined version date
-        - Add the installation directory to the system path environment variable if it's not already present
+          This task requires administrator privileges.
 
-        The location where the utilities will be installed depends on the OS architecture:
-        - 32-bit: The "Sysinternals" folder in the "Program Files" directory
-        - 64-bit: The "Sysinternals" folder in the "Program Files (x86)" directory
+        - WindowsUpdates
+          Downloads and installs all available Windows updates.
 
-        This parameter requires administrator privileges.
+          Updates from Microsoft Update are also included if opted-in via the Windows Update configuration.
 
-        .PARAMETER WindowsUpdates
-        Downloads and installs all available Windows updates.
+          This task requires administrator privileges and the PSWindowsUpdate module.
 
-        Updates from Microsoft Update are also included if opted-in via the Windows Update configuration.
-
-        This parameter requires administrator privileges and the PSWindowsUpdate module.
+        The default is to run all tasks.
 
         .EXAMPLE
-        Invoke-VitalMaintenance -WindowsUpdates -SysinternalsSuite
+        Invoke-VitalMaintenance -IncludeTasks WindowsUpdates, SysinternalsSuite
 
         Only install Windows updates and the latest Sysinternals utilities.
 
@@ -515,46 +561,64 @@ Function Invoke-VitalMaintenance {
         https://github.com/ralish/PSWinVitals
     #>
 
-    [CmdletBinding(DefaultParameterSetName='Default')]
+    [CmdletBinding(DefaultParameterSetName='OptOut')]
     Param(
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$ComponentStoreCleanup,
+        [Parameter(ParameterSetName='OptOut')]
+        [ValidateSet(
+            'ComponentStoreCleanup',
+            'ClearInternetExplorerCache',
+            'DeleteErrorReports',
+            'DeleteTemporaryFiles',
+            'EmptyRecycleBin',
+            'PowerShellHelp',
+            'SysinternalsSuite',
+            'WindowsUpdates'
+        )]
+        [String[]]$ExcludeTasks,
 
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$ClearInternetExplorerCache,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$DeleteErrorReports,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$DeleteTemporaryFiles,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$EmptyRecycleBin,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$PowerShellHelp,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$SysinternalsSuite,
-
-        [Parameter(ParameterSetName='Custom')]
-        [Switch]$WindowsUpdates
+        [Parameter(ParameterSetName='OptIn', Mandatory)]
+        [ValidateSet(
+            'ComponentStoreCleanup',
+            'ClearInternetExplorerCache',
+            'DeleteErrorReports',
+            'DeleteTemporaryFiles',
+            'EmptyRecycleBin',
+            'PowerShellHelp',
+            'SysinternalsSuite',
+            'WindowsUpdates'
+        )]
+        [String[]]$IncludeTasks
     )
 
     if (!(Test-IsAdministrator)) {
         throw 'You must have administrator privileges to perform system maintenance.'
     }
 
-    if ($PSCmdlet.ParameterSetName -eq 'Default') {
-        $ClearInternetExplorerCache = $true
-        $ComponentStoreCleanup = $true
-        $DeleteErrorReports = $true
-        $DeleteTemporaryFiles = $true
-        $EmptyRecycleBin = $true
-        $PowerShellHelp = $true
-        $SysinternalsSuite = $true
-        $WindowsUpdates = $true
+    $Tasks = @{
+        ClearInternetExplorerCache = $null
+        ComponentStoreCleanup = $null
+        DeleteErrorReports = $null
+        DeleteTemporaryFiles = $null
+        EmptyRecycleBin = $null
+        PowerShellHelp = $null
+        SysinternalsSuite = $null
+        WindowsUpdates = $null
+    }
+
+    foreach ($Task in @($Tasks.Keys)) {
+        if ($PSCmdlet.ParameterSetName -eq 'OptOut') {
+            if ($ExcludeTasks -contains $Task) {
+                $Tasks[$Task] = $false
+            } else {
+                $Tasks[$Task] = $true
+            }
+        } else {
+            if ($IncludeTasks -contains $Task) {
+                $Tasks[$Task] = $true
+            } else {
+                $Tasks[$Task] = $false
+            }
+        }
     }
 
     $VitalMaintenance = [PSCustomObject]@{
@@ -568,7 +632,7 @@ Function Invoke-VitalMaintenance {
         WindowsUpdates = $null
     }
 
-    if ($WindowsUpdates) {
+    if ($Tasks['WindowsUpdates']) {
         if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Installing Windows updates ...'
             $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll
@@ -578,12 +642,12 @@ Function Invoke-VitalMaintenance {
         }
     }
 
-    if ($ComponentStoreCleanup) {
+    if ($Tasks['ComponentStoreCleanup']) {
         Write-Host -ForegroundColor Green -Object 'Running component store clean-up ...'
         $VitalMaintenance.ComponentStoreCleanup = Invoke-DISM -Operation StartComponentCleanup
     }
 
-    if ($PowerShellHelp) {
+    if ($Tasks['PowerShellHelp']) {
         Write-Host -ForegroundColor Green -Object 'Updating PowerShell help ...'
         try {
             Update-Help -Force -ErrorAction Stop
@@ -595,12 +659,12 @@ Function Invoke-VitalMaintenance {
         }
     }
 
-    if ($SysinternalsSuite) {
+    if ($Tasks['SysinternalsSuite']) {
         Write-Host -ForegroundColor Green -Object 'Updating Sysinternals Suite ...'
         $VitalMaintenance.SysinternalsSuite = Update-Sysinternals
     }
 
-    if ($ClearInternetExplorerCache) {
+    if ($Tasks['ClearInternetExplorerCache']) {
         if (Get-Command -Name inetcpl.cpl -ErrorAction Ignore) {
             Write-Host -ForegroundColor Green -Object 'Clearing Internet Explorer cache ...'
             # More details on the bitmask here: https://github.com/SeleniumHQ/selenium/blob/master/cpp/iedriver/BrowserFactory.cpp
@@ -613,7 +677,7 @@ Function Invoke-VitalMaintenance {
         }
     }
 
-    if ($DeleteErrorReports) {
+    if ($Tasks['DeleteErrorReports']) {
         Write-Host -ForegroundColor Green -Object 'Deleting system error reports ...'
         $SystemReports = Join-Path -Path $env:ProgramData -ChildPath 'Microsoft\Windows\WER'
         $SystemQueue = Join-Path -Path $SystemReports -ChildPath 'ReportQueue'
@@ -637,7 +701,7 @@ Function Invoke-VitalMaintenance {
         $VitalMaintenance.DeleteErrorReports = $true
     }
 
-    if ($DeleteTemporaryFiles) {
+    if ($Tasks['DeleteTemporaryFiles']) {
         Write-Host -ForegroundColor Green -Object 'Deleting system temporary files ...'
         $SystemTemp = [Environment]::GetEnvironmentVariable('Temp', [EnvironmentVariableTarget]::Machine)
         Remove-Item -Path "$SystemTemp\*" -Recurse -ErrorAction Ignore
@@ -648,7 +712,7 @@ Function Invoke-VitalMaintenance {
         $VitalMaintenance.DeleteTemporaryFiles = $true
     }
 
-    if ($EmptyRecycleBin) {
+    if ($Tasks['EmptyRecycleBin']) {
         if (Get-Command -Name Clear-RecycleBin -ErrorAction Ignore) {
             Write-Host -ForegroundColor Green -Object 'Emptying Recycle Bin ...'
             try {
