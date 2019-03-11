@@ -380,14 +380,14 @@ Function Invoke-VitalChecks {
         [Switch]$VerifyOnly
     )
 
+    if (!(Test-IsAdministrator)) {
+        throw 'You must have administrator privileges to perform system health checks.'
+    }
+
     if ($PSCmdlet.ParameterSetName -eq 'Default') {
         $ComponentStoreScan = $true
         $FileSystemScans = $true
         $SystemFileChecker = $true
-    }
-
-    if (!(Test-IsAdministrator)) {
-        throw 'You must have administrator privileges to perform system health checks.'
     }
 
     $VitalChecks = [PSCustomObject]@{
@@ -542,6 +542,10 @@ Function Invoke-VitalMaintenance {
         [Switch]$WindowsUpdates
     )
 
+    if (!(Test-IsAdministrator)) {
+        throw 'You must have administrator privileges to perform system maintenance.'
+    }
+
     if ($PSCmdlet.ParameterSetName -eq 'Default') {
         $ClearInternetExplorerCache = $true
         $ComponentStoreCleanup = $true
@@ -551,10 +555,6 @@ Function Invoke-VitalMaintenance {
         $PowerShellHelp = $true
         $SysinternalsSuite = $true
         $WindowsUpdates = $true
-    }
-
-    if (!(Test-IsAdministrator)) {
-        throw 'You must have administrator privileges to perform system maintenance.'
     }
 
     $VitalMaintenance = [PSCustomObject]@{
