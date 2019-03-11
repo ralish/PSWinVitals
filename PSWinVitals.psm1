@@ -21,6 +21,8 @@ Function Get-VitalInformation {
         - CrashDumps
           Checks for any kernel or service account crash dumps.
 
+          This task requires administrator privileges.
+
         - DevicesNotPresent
           Retrieves any PnP devices which are not present.
 
@@ -174,9 +176,9 @@ Function Get-VitalInformation {
         }
     }
 
-    if ($Tasks['ComponentStoreAnalysis']) {
+    if ($Tasks['ComponentStoreAnalysis'] -or $Tasks['CrashDumps']) {
         if (!(Test-IsAdministrator)) {
-            throw 'You must have administrator privileges to analyse the component store.'
+            throw 'You must have administrator privileges to analyse the component store or retrieve crash dumps.'
         }
     }
 
