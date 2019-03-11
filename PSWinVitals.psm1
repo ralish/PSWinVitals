@@ -74,7 +74,7 @@ Function Get-VitalInformation {
 
           Updates from Microsoft Update are also included if opted-in via the Windows Update configuration.
 
-          This task requires the PSWindowsUpdate module.
+          This task requires administrator privileges and the PSWindowsUpdate module.
 
         The default is to run all tasks.
 
@@ -176,9 +176,9 @@ Function Get-VitalInformation {
         }
     }
 
-    if ($Tasks['ComponentStoreAnalysis'] -or $Tasks['CrashDumps']) {
+    if ($Tasks['ComponentStoreAnalysis'] -or $Tasks['CrashDumps'] -or $Tasks['WindowsUpdates']) {
         if (!(Test-IsAdministrator)) {
-            throw 'You must have administrator privileges to analyse the component store or retrieve crash dumps.'
+            throw 'You must have administrator privileges to analyse the component store, retrieve crash dumps, or retrieve Windows updates.'
         }
     }
 
