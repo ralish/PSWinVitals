@@ -1,6 +1,14 @@
 Changelog
 =========
 
+v0.4.0
+------
+
+- **Breaking change**: Parameters for all functions have been reworked for more flexible task selection
+- `Get-VitalInformation`: The `CrashDumps` task checks we're running with Administrator privileges
+- `Get-VitalInformation`: The `InstalledFeatures` task checks if we're running on Windows Server
+- `Get-VitalInformation`: The `WindowsUpdates` task checks we're running with Administrator privileges
+
 v0.3.7
 ------
 
