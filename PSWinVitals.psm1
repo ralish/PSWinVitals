@@ -1195,7 +1195,7 @@ Function Expand-ZipFile {
 
 Function Get-WindowsProductType {
     [CmdletBinding()]
-    [OutputType([Int])]
+    [OutputType([int])]
     Param()
 
     return (Get-CimInstance -ClassName Win32_OperatingSystem).ProductType
@@ -1203,7 +1203,7 @@ Function Get-WindowsProductType {
 
 Function Test-IsAdministrator {
     [CmdletBinding()]
-    [OutputType([Boolean])]
+    [OutputType([bool])]
     Param()
 
     $User = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
@@ -1215,7 +1215,7 @@ Function Test-IsAdministrator {
 
 Function Test-IsWindows64bit {
     [CmdletBinding()]
-    [OutputType([Boolean])]
+    [OutputType([bool])]
     Param()
 
     if ((Get-CimInstance -ClassName Win32_OperatingSystem).OSArchitecture -eq '64-bit') {
