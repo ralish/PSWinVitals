@@ -1,7 +1,7 @@
 PSWinVitals
 ===========
 
-[![pwsh gv](https://img.shields.io/powershellgallery/v/PSWinVitals)](https://www.powershellgallery.com/packages/PSWinVitals)
+[![pwsh ver](https://img.shields.io/powershellgallery/v/PSWinVitals)](https://www.powershellgallery.com/packages/PSWinVitals)
 [![pwsh dl](https://img.shields.io/powershellgallery/dt/PSWinVitals)](https://www.powershellgallery.com/packages/PSWinVitals)
 [![license](https://img.shields.io/github/license/ralish/PSWinVitals)](https://choosealicense.com/licenses/mit/)
 
