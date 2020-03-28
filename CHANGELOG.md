@@ -1,6 +1,12 @@
 Changelog
 =========
 
+v0.4.1
+------
+
+- Remove unneeded files from published package
+- Minor documentation updates & miscellaneous fixes
+
 v0.4.0
 ------
 
