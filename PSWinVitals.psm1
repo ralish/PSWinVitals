@@ -397,6 +397,7 @@ Function Invoke-VitalChecks {
         https://github.com/ralish/PSWinVitals
     #>
 
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding(DefaultParameterSetName='OptOut')]
     Param(
         [Parameter(ParameterSetName='OptOut')]
@@ -797,6 +798,7 @@ Function Get-HypervisorInfo {
 }
 
 Function Get-InstalledPrograms {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
     Param()
 
@@ -890,6 +892,7 @@ Function Get-InstalledPrograms {
 }
 
 Function Get-KernelCrashDumps {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
     Param()
 
@@ -933,6 +936,7 @@ Function Get-KernelCrashDumps {
 }
 
 Function Get-ServiceCrashDumps {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
     Param()
 
@@ -1096,6 +1100,7 @@ Function Invoke-SFC {
 
 Function Update-Sysinternals {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
     Param(
         [ValidatePattern('^http[Ss]?://.*')]

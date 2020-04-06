@@ -3,7 +3,6 @@
 
     ExcludeRules = @(
         'PSAvoidUsingWriteHost',
-        'PSUseSingularNouns',
         'PSUseOutputTypeCorrectly'
     )
 
