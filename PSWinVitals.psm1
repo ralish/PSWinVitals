@@ -801,7 +801,7 @@ Function Get-InstalledPrograms {
     [CmdletBinding()]
     Param()
 
-    $Results = @()
+    $Results = [Collections.ArrayList]::new()
     $TypeName = 'PSWinVitals.InstalledProgram'
 
     Update-TypeData -TypeName $TypeName -DefaultDisplayPropertySet @('Name', 'Publisher', 'Version') -Force
@@ -884,7 +884,7 @@ Function Get-InstalledPrograms {
             $Result.Uninstall = $Program.UninstallString
         }
 
-        $Results += $Result
+        $null = $Results.Add($Result)
     }
 
     return ($Results | Sort-Object -Property Name)
@@ -970,6 +970,7 @@ Function Get-ServiceCrashDumps {
 }
 
 Function Invoke-CHKDSK {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '')]
     [CmdletBinding()]
     Param(
         [ValidateSet('Scan', 'Verify')]
@@ -990,7 +991,7 @@ Function Invoke-CHKDSK {
 
     $Volumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.FileSystem -in $SupportedFileSystems }
 
-    [PSCustomObject[]]$Results = $null
+    $Results = [Collections.ArrayList]::new()
     foreach ($Volume in $Volumes) {
         $VolumePath = $Volume.Path.TrimEnd('\')
 
@@ -1009,9 +1010,9 @@ Function Invoke-CHKDSK {
         Write-Verbose -Message ('[{0}] Running {1} operation on: {2}' -f $LogPrefix, $Operation.ToLower(), $VolumePath)
         $ChkDskPath = Join-Path -Path $env:SystemRoot -ChildPath 'System32\chkdsk.exe'
         if ($Operation -eq 'Scan') {
-            $CHKDSK.Output += & $ChkDskPath "$VolumePath" /scan
+            $CHKDSK.Output += & $ChkDskPath $VolumePath /scan
         } else {
-            $CHKDSK.Output += & $ChkDskPath "$VolumePath"
+            $CHKDSK.Output += & $ChkDskPath $VolumePath
         }
         $CHKDSK.ExitCode = $LASTEXITCODE
 
@@ -1022,7 +1023,7 @@ Function Invoke-CHKDSK {
             default { Write-Error -Message ('[{0}] Unexpected exit code: {1}' -f $LogPrefix, $CHKDSK.ExitCode) }
         }
 
-        $Results += $CHKDSK
+        $null = $Results.Add($CHKDSK)
     }
 
     return $Results
