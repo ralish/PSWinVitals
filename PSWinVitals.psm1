@@ -745,7 +745,6 @@ Function Invoke-VitalMaintenance {
 }
 
 Function Get-HypervisorInfo {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '')]
     [CmdletBinding()]
     Param()
 
@@ -970,7 +969,6 @@ Function Get-ServiceCrashDumps {
 }
 
 Function Invoke-CHKDSK {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '')]
     [CmdletBinding()]
     Param(
         [ValidateSet('Scan', 'Verify')]
@@ -1196,7 +1194,6 @@ Function Expand-ZipFile {
 
 Function Get-WindowsProductType {
     [CmdletBinding()]
-    [OutputType([int])]
     Param()
 
     return (Get-CimInstance -ClassName Win32_OperatingSystem).ProductType
@@ -1204,7 +1201,6 @@ Function Get-WindowsProductType {
 
 Function Test-IsAdministrator {
     [CmdletBinding()]
-    [OutputType([bool])]
     Param()
 
     $User = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
@@ -1216,7 +1212,6 @@ Function Test-IsAdministrator {
 
 Function Test-IsWindows64bit {
     [CmdletBinding()]
-    [OutputType([bool])]
     Param()
 
     if ((Get-CimInstance -ClassName Win32_OperatingSystem).OSArchitecture -eq '64-bit') {
