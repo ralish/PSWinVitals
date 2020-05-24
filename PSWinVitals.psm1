@@ -802,7 +802,7 @@ Function Get-InstalledPrograms {
     [CmdletBinding()]
     Param()
 
-    $Results = [Collections.ArrayList]::new()
+    $Results = New-Object -TypeName Collections.ArrayList
     $TypeName = 'PSWinVitals.InstalledProgram'
 
     Update-TypeData -TypeName $TypeName -DefaultDisplayPropertySet @('Name', 'Publisher', 'Version') -Force
@@ -993,7 +993,7 @@ Function Invoke-CHKDSK {
 
     $Volumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.FileSystem -in $SupportedFileSystems }
 
-    $Results = [Collections.ArrayList]::new()
+    $Results = New-Object -TypeName Collections.ArrayList
     foreach ($Volume in $Volumes) {
         $VolumePath = $Volume.Path.TrimEnd('\')
 
