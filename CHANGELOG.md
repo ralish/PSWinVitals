@@ -1,6 +1,12 @@
 Changelog
 =========
 
+v0.4.2
+------
+
+- Syntax fixes for older PowerShell versions
+- Performance optimisations around array use
+
 v0.4.1
 ------
 
