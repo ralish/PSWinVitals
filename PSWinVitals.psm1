@@ -108,9 +108,9 @@ Function Get-VitalInformation {
         https://github.com/ralish/PSWinVitals
     #>
 
-    [CmdletBinding(DefaultParameterSetName='OptOut')]
+    [CmdletBinding(DefaultParameterSetName = 'OptOut')]
     Param(
-        [Parameter(ParameterSetName='OptOut')]
+        [Parameter(ParameterSetName = 'OptOut')]
         [ValidateSet(
             'ComponentStoreAnalysis',
             'ComputerInfo',
@@ -127,7 +127,7 @@ Function Get-VitalInformation {
         )]
         [String[]]$ExcludeTasks,
 
-        [Parameter(ParameterSetName='OptIn', Mandatory)]
+        [Parameter(ParameterSetName = 'OptIn', Mandatory)]
         [ValidateSet(
             'ComponentStoreAnalysis',
             'ComputerInfo',
@@ -147,17 +147,17 @@ Function Get-VitalInformation {
 
     $Tasks = @{
         ComponentStoreAnalysis = $null
-        ComputerInfo = $null
-        CrashDumps = $null
-        DevicesNotPresent = $null
-        DevicesWithBadStatus = $null
-        EnvironmentVariables = $null
-        HypervisorInfo = $null
-        InstalledFeatures = $null
-        InstalledPrograms = $null
-        StorageVolumes = $null
-        SysinternalsSuite = $null
-        WindowsUpdates = $null
+        ComputerInfo           = $null
+        CrashDumps             = $null
+        DevicesNotPresent      = $null
+        DevicesWithBadStatus   = $null
+        EnvironmentVariables   = $null
+        HypervisorInfo         = $null
+        InstalledFeatures      = $null
+        InstalledPrograms      = $null
+        StorageVolumes         = $null
+        SysinternalsSuite      = $null
+        WindowsUpdates         = $null
     }
 
     foreach ($Task in @($Tasks.Keys)) {
@@ -184,17 +184,17 @@ Function Get-VitalInformation {
 
     $VitalInformation = [PSCustomObject]@{
         ComponentStoreAnalysis = $null
-        ComputerInfo = $null
-        CrashDumps = $null
-        DevicesNotPresent = $null
-        DevicesWithBadStatus = $null
-        EnvironmentVariables = $null
-        HypervisorInfo = $null
-        InstalledFeatures = $null
-        InstalledPrograms = $null
-        StorageVolumes = $null
-        SysinternalsSuite = $null
-        WindowsUpdates = $null
+        ComputerInfo           = $null
+        CrashDumps             = $null
+        DevicesNotPresent      = $null
+        DevicesWithBadStatus   = $null
+        EnvironmentVariables   = $null
+        HypervisorInfo         = $null
+        InstalledFeatures      = $null
+        InstalledPrograms      = $null
+        StorageVolumes         = $null
+        SysinternalsSuite      = $null
+        WindowsUpdates         = $null
     }
 
     if ($Tasks['ComputerInfo']) {
@@ -244,7 +244,7 @@ Function Get-VitalInformation {
 
     if ($Tasks['CrashDumps']) {
         [PSCustomObject]$CrashDumps = [PSCustomObject]@{
-            Kernel = $null
+            Kernel  = $null
             Service = $null
         }
 
@@ -285,7 +285,7 @@ Function Get-VitalInformation {
     if ($Tasks['EnvironmentVariables']) {
         [PSCustomObject]$EnvironmentVariables = [PSCustomObject]@{
             Machine = $null
-            User = $null
+            User    = $null
         }
 
         Write-Host -ForegroundColor Green -Object 'Retrieving system environment variables ...'
@@ -316,7 +316,7 @@ Function Get-VitalInformation {
 
         if (Test-Path -Path $InstallDir -PathType Container) {
             $Sysinternals = [PSCustomObject]@{
-                Path = $null
+                Path    = $null
                 Version = $null
                 Updated = $false
             }
@@ -398,9 +398,9 @@ Function Invoke-VitalChecks {
     #>
 
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
-    [CmdletBinding(DefaultParameterSetName='OptOut')]
+    [CmdletBinding(DefaultParameterSetName = 'OptOut')]
     Param(
-        [Parameter(ParameterSetName='OptOut')]
+        [Parameter(ParameterSetName = 'OptOut')]
         [ValidateSet(
             'ComponentStoreScan',
             'FileSystemScans',
@@ -408,7 +408,7 @@ Function Invoke-VitalChecks {
         )]
         [String[]]$ExcludeTasks,
 
-        [Parameter(ParameterSetName='OptIn', Mandatory)]
+        [Parameter(ParameterSetName = 'OptIn', Mandatory)]
         [ValidateSet(
             'ComponentStoreScan',
             'FileSystemScans',
@@ -425,8 +425,8 @@ Function Invoke-VitalChecks {
 
     $Tasks = @{
         ComponentStoreScan = $null
-        FileSystemScans = $null
-        SystemFileChecker = $null
+        FileSystemScans    = $null
+        SystemFileChecker  = $null
     }
 
     foreach ($Task in @($Tasks.Keys)) {
@@ -447,8 +447,8 @@ Function Invoke-VitalChecks {
 
     $VitalChecks = [PSCustomObject]@{
         ComponentStoreScan = $null
-        FileSystemScans = $null
-        SystemFileChecker = $null
+        FileSystemScans    = $null
+        SystemFileChecker  = $null
     }
 
     if ($Tasks['FileSystemScans']) {
@@ -569,9 +569,9 @@ Function Invoke-VitalMaintenance {
         https://github.com/ralish/PSWinVitals
     #>
 
-    [CmdletBinding(DefaultParameterSetName='OptOut')]
+    [CmdletBinding(DefaultParameterSetName = 'OptOut')]
     Param(
-        [Parameter(ParameterSetName='OptOut')]
+        [Parameter(ParameterSetName = 'OptOut')]
         [ValidateSet(
             'ComponentStoreCleanup',
             'ClearInternetExplorerCache',
@@ -584,7 +584,7 @@ Function Invoke-VitalMaintenance {
         )]
         [String[]]$ExcludeTasks,
 
-        [Parameter(ParameterSetName='OptIn', Mandatory)]
+        [Parameter(ParameterSetName = 'OptIn', Mandatory)]
         [ValidateSet(
             'ComponentStoreCleanup',
             'ClearInternetExplorerCache',
@@ -604,13 +604,13 @@ Function Invoke-VitalMaintenance {
 
     $Tasks = @{
         ClearInternetExplorerCache = $null
-        ComponentStoreCleanup = $null
-        DeleteErrorReports = $null
-        DeleteTemporaryFiles = $null
-        EmptyRecycleBin = $null
-        PowerShellHelp = $null
-        SysinternalsSuite = $null
-        WindowsUpdates = $null
+        ComponentStoreCleanup      = $null
+        DeleteErrorReports         = $null
+        DeleteTemporaryFiles       = $null
+        EmptyRecycleBin            = $null
+        PowerShellHelp             = $null
+        SysinternalsSuite          = $null
+        WindowsUpdates             = $null
     }
 
     foreach ($Task in @($Tasks.Keys)) {
@@ -631,13 +631,13 @@ Function Invoke-VitalMaintenance {
 
     $VitalMaintenance = [PSCustomObject]@{
         ClearInternetExplorerCache = $null
-        ComponentStoreCleanup = $null
-        DeleteErrorReports = $null
-        DeleteTemporaryFiles = $null
-        EmptyRecycleBin = $null
-        PowerShellHelp = $null
-        SysinternalsSuite = $null
-        WindowsUpdates = $null
+        ComponentStoreCleanup      = $null
+        DeleteErrorReports         = $null
+        DeleteTemporaryFiles       = $null
+        EmptyRecycleBin            = $null
+        PowerShellHelp             = $null
+        SysinternalsSuite          = $null
+        WindowsUpdates             = $null
     }
 
     if ($Tasks['WindowsUpdates']) {
@@ -751,8 +751,8 @@ Function Get-HypervisorInfo {
 
     $LogPrefix = 'HypervisorInfo'
     $HypervisorInfo = [PSCustomObject]@{
-        Vendor = $null
-        Hypervisor = $null
+        Vendor       = $null
+        Hypervisor   = $null
         ToolsVersion = $null
     }
 
@@ -850,15 +850,15 @@ Function Get-InstalledPrograms {
         }
 
         $Result = [PSCustomObject]@{
-            PSTypeName      = $TypeName
-            PSPath          = $Program.PSPath
-            Name            = $Program.DisplayName
-            Publisher       = $null
-            InstallDate     = $null
-            EstimatedSize   = $null
-            Version         = $null
-            Location        = $null
-            Uninstall       = $null
+            PSTypeName    = $TypeName
+            PSPath        = $Program.PSPath
+            Name          = $Program.DisplayName
+            Publisher     = $null
+            InstallDate   = $null
+            EstimatedSize = $null
+            Version       = $null
+            Location      = $null
+            Uninstall     = $null
         }
 
         if ($Program.PSObject.Properties['Publisher']) {
@@ -899,7 +899,7 @@ Function Get-KernelCrashDumps {
     $LogPrefix = 'KernelCrashDumps'
     $KernelCrashDumps = [PSCustomObject]@{
         MemoryDump = $null
-        Minidumps = $null
+        Minidumps  = $null
     }
 
     $CrashControlRegPath = 'HKLM:\System\CurrentControlSet\Control\CrashControl'
@@ -942,8 +942,8 @@ Function Get-ServiceCrashDumps {
 
     $LogPrefix = 'ServiceCrashDumps'
     $ServiceCrashDumps = [PSCustomObject]@{
-        LocalSystem = $null
-        LocalService = $null
+        LocalSystem    = $null
+        LocalService   = $null
         NetworkService = $null
     }
 
@@ -1003,10 +1003,10 @@ Function Invoke-CHKDSK {
         }
 
         $CHKDSK = [PSCustomObject]@{
-            Operation = $Operation
+            Operation  = $Operation
             VolumePath = $VolumePath
-            Output = $null
-            ExitCode = $null
+            Output     = $null
+            ExitCode   = $null
         }
 
         Write-Verbose -Message ('[{0}] Running {1} operation on: {2}' -f $LogPrefix, $Operation.ToLower(), $VolumePath)
@@ -1044,8 +1044,8 @@ Function Invoke-DISM {
     $LogPrefix = 'DISM'
     $DISM = [PSCustomObject]@{
         Operation = $Operation
-        Output = $null
-        ExitCode = $null
+        Output    = $null
+        ExitCode  = $null
     }
 
     Write-Verbose -Message ('[{0}] Running {1} operation ...' -f $LogPrefix, $Operation)
@@ -1072,8 +1072,8 @@ Function Invoke-SFC {
     $LogPrefix = 'SFC'
     $SFC = [PSCustomObject]@{
         Operation = $Operation
-        Output = $null
-        ExitCode = $null
+        Output    = $null
+        ExitCode  = $null
     }
 
     Write-Verbose -Message ('[{0}] Running {1} operation ...' -f $LogPrefix, $Operation.ToLower())
@@ -1109,7 +1109,7 @@ Function Update-Sysinternals {
 
     $LogPrefix = 'Sysinternals'
     $Sysinternals = [PSCustomObject]@{
-        Path = $null
+        Path    = $null
         Version = $null
         Updated = $false
     }
