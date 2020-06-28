@@ -555,6 +555,15 @@ Function Invoke-VitalMaintenance {
         .PARAMETER IncludeTasks
         Array of tasks to include. At least one task must be specified.
 
+        .PARAMETER WUTitleExclude
+        Available Windows Updates which match this string will not be installed.
+
+        Particularly useful to avoid unintentionally installing Microsoft Silverlight.
+
+        Corresponds to the -NotTitle parameter of Install-WindowsUpdate in PSWindowsUpdate.
+
+        Only used if the WindowsUpdates task is selected.
+
         .EXAMPLE
         Invoke-VitalMaintenance -IncludeTasks WindowsUpdates, SysinternalsSuite
 
@@ -601,7 +610,10 @@ Function Invoke-VitalMaintenance {
             'SysinternalsSuite',
             'WindowsUpdates'
         )]
-        [String[]]$IncludeTasks
+        [String[]]$IncludeTasks,
+
+        [ValidateNotNullOrEmpty()]
+        [String]$WUTitleExclude
     )
 
     if (!(Test-IsAdministrator)) {
@@ -649,7 +661,11 @@ Function Invoke-VitalMaintenance {
     if ($Tasks['WindowsUpdates']) {
         if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Installing Windows updates ...'
-            $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll
+            if ($PSBoundParameters.ContainsKey('WUTitleExclude')) {
+                $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll -NotTitle $WUTitleExclude
+            } else {
+                $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll
+            }
         } else {
             Write-Warning -Message 'Unable to install Windows updates as PSWindowsUpdate module not available.'
             $VitalMaintenance.WindowsUpdates = $false
