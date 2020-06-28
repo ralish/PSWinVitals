@@ -549,6 +549,12 @@ Function Invoke-VitalMaintenance {
 
         The default is to run all tasks.
 
+        .PARAMETER ExcludeTasks
+        Array of tasks to exclude. The default is an empty array (i.e. run all tasks).
+
+        .PARAMETER IncludeTasks
+        Array of tasks to include. At least one task must be specified.
+
         .EXAMPLE
         Invoke-VitalMaintenance -IncludeTasks WindowsUpdates, SysinternalsSuite
 
