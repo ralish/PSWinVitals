@@ -1,6 +1,14 @@
 Changelog
 =========
 
+v0.4.3
+------
+
+- `Invoke-VitalChecks`: Skip `ChkDsk` scan for *PortableBaseLayer* volume
+- `Invoke-VitalMaintenance`: Add `-WUTitleExclude` parameter for excluding updates by title
+- `Invoke-VitalMaintenance`: Add missing help information for parameters
+- Apply code formatting
+
 v0.4.2
 ------
 
