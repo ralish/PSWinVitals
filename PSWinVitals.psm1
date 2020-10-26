@@ -1024,6 +1024,11 @@ Function Invoke-CHKDSK {
             continue
         }
 
+        if ($Operation -eq 'Scan' -and $VolumePath -eq '\\?\Volume{629458e4-0000-0000-0000-010000000000}') {
+            Write-Warning -Message ('[{0}] Skipping {1} volume as shadow copying the volume is not supported.' -f $LogPrefix, $Volume.FileSystemLabel)
+            continue
+        }
+
         $CHKDSK = [PSCustomObject]@{
             Operation  = $Operation
             VolumePath = $VolumePath
