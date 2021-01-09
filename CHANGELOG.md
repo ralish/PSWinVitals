@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.4.4
+------
+
+- `Get-VitalInformation`: Fall back to last write time of uninstall key for installed programs
+
 v0.4.3
 ------
 
