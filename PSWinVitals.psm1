@@ -659,16 +659,20 @@ Function Invoke-VitalMaintenance {
     }
 
     if ($Tasks['WindowsUpdates']) {
-        if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
+        try {
+            Import-Module -Name PSWindowsUpdate -ErrorAction Stop
+        } catch [IO.FileNotFoundException] {
+            Write-Warning -Message 'Unable to install Windows updates as PSWindowsUpdate module not available.'
+            $VitalMaintenance.WindowsUpdates = $false
+        }
+
+        if ($null -eq $VitalMaintenance.WindowsUpdates) {
             Write-Host -ForegroundColor Green -Object 'Installing Windows updates ...'
             if ($PSBoundParameters.ContainsKey('WUTitleExclude')) {
                 $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll -NotTitle $WUTitleExclude
             } else {
                 $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll
             }
-        } else {
-            Write-Warning -Message 'Unable to install Windows updates as PSWindowsUpdate module not available.'
-            $VitalMaintenance.WindowsUpdates = $false
         }
     }
 
