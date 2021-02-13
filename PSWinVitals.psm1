@@ -465,21 +465,21 @@ Function Invoke-VitalChecks {
         }
     }
 
-    if ($Tasks['SystemFileChecker']) {
-        Write-Host -ForegroundColor Green -Object 'Running System File Checker ...'
-        if ($VerifyOnly) {
-            $VitalChecks.SystemFileChecker = Invoke-SFC -Operation Verify
-        } else {
-            $VitalChecks.SystemFileChecker = Invoke-SFC -Operation Scan
-        }
-    }
-
     if ($Tasks['ComponentStoreScan']) {
         Write-Host -ForegroundColor Green -Object 'Running component store scan ...'
         if ($VerifyOnly) {
             $VitalChecks.ComponentStoreScan = Invoke-DISM -Operation ScanHealth
         } else {
             $VitalChecks.ComponentStoreScan = Invoke-DISM -Operation RestoreHealth
+        }
+    }
+
+    if ($Tasks['SystemFileChecker']) {
+        Write-Host -ForegroundColor Green -Object 'Running System File Checker ...'
+        if ($VerifyOnly) {
+            $VitalChecks.SystemFileChecker = Invoke-SFC -Operation Verify
+        } else {
+            $VitalChecks.SystemFileChecker = Invoke-SFC -Operation Scan
         }
     }
 
