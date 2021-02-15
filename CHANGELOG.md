@@ -1,6 +1,12 @@
 Changelog
 =========
 
+v0.4.5
+------
+
+- `Invoke-VitalChecks`: Run SFC scan after component store scan as the more correct ordering
+- `Invoke-VitalMaintenance`: Explicitly import `PSWindowsUpdate` module to fix PowerShell Core issue
+
 v0.4.4
 ------
 
