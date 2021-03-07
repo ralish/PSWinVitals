@@ -1136,13 +1136,17 @@ Function Invoke-SFC {
     $SfcPath = Join-Path -Path $env:SystemRoot -ChildPath 'System32\sfc.exe'
     # SFC output is UTF-16 in contrast to most built-in Windows console applications? We're probably
     # using ASCII (or similar), so if we don't change this, the text output will be somewhat broken.
+    #
+    # In addition, SFC seems to output \r\r\n sequences?! PowerShell interprets this sequence as two
+    # new lines, so we have to remove the additional ones or the output will appear weirdly spaced.
     $DefaultOutputEncoding = [Console]::OutputEncoding
     [Console]::OutputEncoding = [Text.Encoding]::Unicode
     if ($Operation -eq 'Scan') {
-        $SFC.Output = & $SfcPath /SCANNOW
+        $SfcParam = '/SCANNOW'
     } else {
-        $SFC.Output = & $SfcPath /VERIFYONLY
+        $SfcParam = '/VERIFYONLY'
     }
+    $SFC.Output = (& $SfcPath $SfcParam) -join "`r`n" -replace "`r`n`r`n", "`r`n"
     $SFC.ExitCode = $LASTEXITCODE
     [Console]::OutputEncoding = $DefaultOutputEncoding
 
