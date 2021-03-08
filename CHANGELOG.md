@@ -1,6 +1,12 @@
 Changelog
 =========
 
+v0.4.6
+------
+
+- `Invoke-VitalChecks`: Fix SFC output under sessions without a console (e.g. WinRM)
+- `Invoke-VitalChecks`: Remove extra newlines in SFC output due to `\r\r\n` sequences
+
 v0.4.5
 ------
 
