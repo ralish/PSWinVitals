@@ -1188,7 +1188,8 @@ Function Invoke-SFC {
     } else {
         $SfcParam = '/VERIFYONLY'
     }
-    $SFC.Output = (& $SfcPath $SfcParam) -join "`r`n" -replace "`r`n`r`n", "`r`n"
+    # Remove the duplicate newlines and then split on them so the output is a string array
+    $SFC.Output = ((& $SfcPath $SfcParam) -join "`r`n" -replace "`r`n`r`n", "`r`n") -split "`r`n"
     $SFC.ExitCode = $LASTEXITCODE
 
     Write-Debug -Message ('[{0}] Restoring original console output encoding.' -f $LogPrefix, $Operation.ToLower())
