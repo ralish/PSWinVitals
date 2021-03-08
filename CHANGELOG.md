@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.4.7
+------
+
+- `Invoke-VitalChecks`: Split SFC output on newlines so the output is a string array
+
 v0.4.6
 ------
 
