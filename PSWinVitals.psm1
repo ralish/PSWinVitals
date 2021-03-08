@@ -1125,6 +1125,43 @@ Function Invoke-SFC {
         [String]$Operation = 'Scan'
     )
 
+    <#
+        SFC is a horror show when it comes to capturing its output:
+
+        1. In contrast to most (every?) other built-in Windows console application, SFC output is
+           UTF-16LE. PowerShell is probably expecting windows-1252 (a superset of ASCII), and so the
+           output will be decoded incorrectly. We can fix this by temporarily setting to Unicode the
+           [Console]::OutputEncoding property to specify the encoding used by native applications.
+
+        2. It outputs \r\r\n sequences for newlines (yes, really). PowerShell will interpret this as
+           two newlines, so we need to massage the output a little to remove those extra newlines.
+
+        3. When running in a remote session with WinRM we're not running under a console, which will
+           result in the attempt to set [Console]::OutputEncoding throwing an exception due to an
+           invalid handle. Actually, that's not entirely true; it will work when setting it to the
+           [Text.Encoding]::Unicode enumeration (i.e. UTF-16LE), which is what we want, but will
+           throw the error when we attempt to change it to anything else (like its original value).
+           So we'll get broken output for any subsequent native app that's called other than SFC.
+
+           The solution to this craziness is to manually allocate a console with AllocConsole() and
+           free it with FreeConsole(). This will spawn a ConsoleHost.exe process which will allow us
+           to set [Console]::OutputEncoding without the referenced error. SFC spawns a Console Host
+           process itself if it doesn't inherit a console from the parent process, so this happens
+           anyway, except we attach the console to PowerShell and implicitly its children instead.
+
+        Bonus extra confusion: you'll probably find SFC works just fine if you invoke it directly in
+        PowerShell. That's because the problem only happens when *redirecting* the output. It seems
+        that if SFC output is not being redirected it just directly writes to the console by calling
+        WriteConsole(). Except under WinRM, in which case it's always broken, presumably because its
+        output is always being redirected at some level being under a remote session.
+
+        Useful references:
+        - https://stackoverflow.com/a/57751203/8787985
+        - https://computerexpress1.blogspot.com/2017/11/powershell-and-cyrillic-in-console.html
+    #>
+
+    Add-NativeMethods
+
     $LogPrefix = 'SFC'
     $SFC = [PSCustomObject]@{
         Operation = $Operation
@@ -1132,15 +1169,20 @@ Function Invoke-SFC {
         ExitCode  = $null
     }
 
+    $AllocatedConsole = $false
+    $DefaultOutputEncoding = [Console]::OutputEncoding
+
+    # If AllocConsole() returns false a console is probably already attached
+    if ([PSWinVitals.NativeMethods]::AllocConsole()) {
+        Write-Debug -Message ('[{0}] Allocated a new console.' -f $LogPrefix, $Operation.ToLower())
+        $AllocatedConsole = $true
+    }
+
+    Write-Debug -Message ('[{0}] Setting console output encoding to Unicode.' -f $LogPrefix, $Operation.ToLower())
+    [Console]::OutputEncoding = [Text.Encoding]::Unicode
+
     Write-Verbose -Message ('[{0}] Running {1} operation ...' -f $LogPrefix, $Operation.ToLower())
     $SfcPath = Join-Path -Path $env:SystemRoot -ChildPath 'System32\sfc.exe'
-    # SFC output is UTF-16 in contrast to most built-in Windows console applications? We're probably
-    # using ASCII (or similar), so if we don't change this, the text output will be somewhat broken.
-    #
-    # In addition, SFC seems to output \r\r\n sequences?! PowerShell interprets this sequence as two
-    # new lines, so we have to remove the additional ones or the output will appear weirdly spaced.
-    $DefaultOutputEncoding = [Console]::OutputEncoding
-    [Console]::OutputEncoding = [Text.Encoding]::Unicode
     if ($Operation -eq 'Scan') {
         $SfcParam = '/SCANNOW'
     } else {
@@ -1148,7 +1190,17 @@ Function Invoke-SFC {
     }
     $SFC.Output = (& $SfcPath $SfcParam) -join "`r`n" -replace "`r`n`r`n", "`r`n"
     $SFC.ExitCode = $LASTEXITCODE
+
+    Write-Debug -Message ('[{0}] Restoring original console output encoding.' -f $LogPrefix, $Operation.ToLower())
     [Console]::OutputEncoding = $DefaultOutputEncoding
+
+    if ($AllocatedConsole) {
+        Write-Debug -Message ('[{0}] Freeing allocated console.' -f $LogPrefix, $Operation.ToLower())
+        if (![PSWinVitals.NativeMethods]::FreeConsole()) {
+            $Win32Error = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+            Write-Error -Message ('Failed to free allocated console with error: {0}' -f $Win32Error)
+        }
+    }
 
     switch ($SFC.ExitCode) {
         0 { continue }
@@ -1244,6 +1296,12 @@ Function Add-NativeMethods {
 
     if (!('PSWinVitals.NativeMethods' -as [Type])) {
         $NativeMethods = @'
+[DllImport("kernel32.dll", SetLastError = true)]
+public extern static bool AllocConsole();
+
+[DllImport("kernel32.dll", SetLastError = true)]
+public extern static bool FreeConsole();
+
 [DllImport("advapi32.dll", EntryPoint = "RegQueryInfoKeyW")]
 public static extern int RegQueryInfoKey(Microsoft.Win32.SafeHandles.SafeRegistryHandle hKey,
                                          IntPtr lpClass,
