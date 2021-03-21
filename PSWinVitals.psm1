@@ -555,19 +555,17 @@ Function Invoke-VitalMaintenance {
         .PARAMETER IncludeTasks
         Array of tasks to include. At least one task must be specified.
 
-        .PARAMETER WUTitleExclude
-        Available Windows Updates which match this string will not be installed.
+        .PARAMETER WUParameters
+        Hashtable of additional parameters to pass to Install-WindowsUpdate.
 
-        Particularly useful to avoid unintentionally installing Microsoft Silverlight.
-
-        Corresponds to the -NotTitle parameter of Install-WindowsUpdate in PSWindowsUpdate.
+        The -IgnoreReboot and -AcceptAll parameters are set by default.
 
         Only used if the WindowsUpdates task is selected.
 
         .EXAMPLE
-        Invoke-VitalMaintenance -IncludeTasks WindowsUpdates, SysinternalsSuite
+        Invoke-VitalMaintenance -IncludeTasks WindowsUpdates, SysinternalsSuite -WUParameters @{NotTitle = 'Silverlight'}
 
-        Only install Windows updates and the latest Sysinternals utilities.
+        Only install Windows updates and the latest Sysinternals utilities. Exclude updates with Silverlight in the title.
 
         .NOTES
         Selected maintenance tasks are run in the following order:
@@ -612,8 +610,8 @@ Function Invoke-VitalMaintenance {
         )]
         [String[]]$IncludeTasks,
 
-        [ValidateNotNullOrEmpty()]
-        [String]$WUTitleExclude
+        [ValidateNotNull()]
+        [Hashtable]$WUParameters = @{ }
     )
 
     if (!(Test-IsAdministrator)) {
@@ -668,11 +666,7 @@ Function Invoke-VitalMaintenance {
 
         if ($null -eq $VitalMaintenance.WindowsUpdates) {
             Write-Host -ForegroundColor Green -Object 'Installing Windows updates ...'
-            if ($PSBoundParameters.ContainsKey('WUTitleExclude')) {
-                $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll -NotTitle $WUTitleExclude
-            } else {
-                $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll
-            }
+            $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll @WUParameters
         }
     }
 
