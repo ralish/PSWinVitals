@@ -84,6 +84,11 @@ Function Get-VitalInformation {
         .PARAMETER IncludeTasks
         Array of tasks to include. At least one task must be specified.
 
+        .PARAMETER WUParameters
+        Hashtable of additional parameters to pass to Get-WindowsUpdate.
+
+        Only used if the WindowsUpdates task is selected.
+
         .EXAMPLE
         Get-VitalInformation -IncludeTasks StorageVolumes, InstalledPrograms
 
@@ -142,7 +147,10 @@ Function Get-VitalInformation {
             'SysinternalsSuite',
             'WindowsUpdates'
         )]
-        [String[]]$IncludeTasks
+        [String[]]$IncludeTasks,
+
+        [ValidateNotNull()]
+        [Hashtable]$WUParameters = @{ }
     )
 
     $Tasks = @{
@@ -300,7 +308,7 @@ Function Get-VitalInformation {
     if ($Tasks['WindowsUpdates']) {
         if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving Windows updates ...'
-            $VitalInformation.WindowsUpdates = Get-WindowsUpdate
+            $VitalInformation.WindowsUpdates = Get-WindowsUpdate @WUParameters
         } else {
             Write-Warning -Message 'Unable to retrieve Windows updates as PSWindowsUpdate module not available.'
             $VitalInformation.WindowsUpdates = $false
