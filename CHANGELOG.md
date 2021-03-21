@@ -1,6 +1,12 @@
 Changelog
 =========
 
+v0.5.0
+------
+
+- `Get-VitalInformation`: Add `-WUParameters` for passing arbitrary parameters to `Get-WindowsUpdate`
+- `Invoke-VitalMaintenance`: Replace `-WUTitleExclude` with `-WUParameters` for passing arbitrary parameters to `Install-WindowsUpdate` (**Breaking change**)
+
 v0.4.7
 ------
 
