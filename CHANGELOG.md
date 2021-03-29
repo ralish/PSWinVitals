@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.5.1
+------
+
+- `Invoke-VitalMaintenance`: Permit overwriting files during Sysinternals extraction due to files in archive differing only by case (*upstream issue*)
+
 v0.5.0
 ------
 
