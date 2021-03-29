@@ -1265,7 +1265,10 @@ Function Update-Sysinternals {
     if (!$ExistingVersion -or ($DownloadedVersion -gt $ExistingVersion)) {
         Write-Verbose -Message ('[{0}] Extracting archive to: {1}' -f $LogPrefix, $InstallDir)
         Remove-Item -Path $InstallDir -Recurse -ErrorAction Ignore
-        Expand-ZipFile -FilePath $DownloadPath -DestinationPath $InstallDir
+        # The -Force parameter shouldn't be necessary given we've removed the existing directory
+        # contents. Except sometimes the latest archive has files differing only by case. Permit
+        # overwriting of files to workaround this and hope that the overwritten file was older.
+        Expand-ZipFile -FilePath $DownloadPath -DestinationPath $InstallDir -Force
         Set-Content -Path $VersionFile -Value $DownloadedVersion
         Remove-Item -Path $DownloadPath
 
@@ -1337,15 +1340,17 @@ Function Expand-ZipFile {
         [String]$FilePath,
 
         [Parameter(Mandatory)]
-        [String]$DestinationPath
+        [String]$DestinationPath,
+
+        [Switch]$Force
     )
 
     # The Expand-Archive cmdlet is only available from v5.0
     if ($PSVersionTable.PSVersion.Major -ge 5) {
-        Expand-Archive -Path $FilePath -DestinationPath $DestinationPath
+        Expand-Archive -Path $FilePath -DestinationPath $DestinationPath -Force:$Force
     } else {
         Add-Type -AssemblyName System.IO.Compression.FileSystem
-        [IO.Compression.ZipFile]::ExtractToDirectory($FilePath, $DestinationPath)
+        [IO.Compression.ZipFile]::ExtractToDirectory($FilePath, $DestinationPath, $Force)
     }
 }
 
