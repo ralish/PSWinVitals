@@ -5,6 +5,8 @@ PSWinVitals
 [![pwsh dl](https://img.shields.io/powershellgallery/dt/PSWinVitals)](https://www.powershellgallery.com/packages/PSWinVitals)
 [![license](https://img.shields.io/github/license/ralish/PSWinVitals)](https://choosealicense.com/licenses/mit/)
 
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/ralish/PSWinVitals)
+
 A PowerShell module to consolidate common system health checks, maintenance tasks & inventory retrieval.
 
 - [Usage](#usage)
