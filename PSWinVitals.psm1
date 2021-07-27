@@ -312,7 +312,7 @@ Function Get-VitalInformation {
             $WindowsUpdates = Get-WindowsUpdate @WUParameters
 
             if ($null -ne $WindowsUpdates -and $WindowsUpdates.Count -gt 0) {
-                $VitalInformation.WindowsUpdates = New-Object -TypeName Collections.ArrayList -ArgumentList $WindowsUpdates
+                $VitalInformation.WindowsUpdates = New-Object -TypeName Collections.ArrayList -ArgumentList @(, $WindowsUpdates)
             } else {
                 $VitalInformation.WindowsUpdates = New-Object -TypeName Collections.ArrayList
             }
@@ -686,7 +686,7 @@ Function Invoke-VitalMaintenance {
             $WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll @WUParameters
 
             if ($null -ne $WindowsUpdates -and $WindowsUpdates.Count -gt 0) {
-                $VitalMaintenance.WindowsUpdates = New-Object -TypeName Collections.ArrayList -ArgumentList $WindowsUpdates
+                $VitalMaintenance.WindowsUpdates = New-Object -TypeName Collections.ArrayList -ArgumentList @(, $WindowsUpdates)
             } else {
                 $VitalMaintenance.WindowsUpdates = New-Object -TypeName Collections.ArrayList
             }
@@ -720,7 +720,7 @@ Function Invoke-VitalMaintenance {
             Write-Host -ForegroundColor Green -Object 'Clearing Internet Explorer cache ...'
             # More details on the bitmask here: https://github.com/SeleniumHQ/selenium/blob/master/cpp/iedriver/BrowserFactory.cpp
             $RunDll32Path = Join-Path -Path $env:SystemRoot -ChildPath 'System32\rundll32.exe'
-            Start-Process -FilePath $RunDll32Path -ArgumentList @('inetcpl.cpl,ClearMyTracksByProcess', '9FF') -Wait
+            Start-Process -FilePath $RunDll32Path -ArgumentList 'inetcpl.cpl,ClearMyTracksByProcess', '9FF' -Wait
             $VitalMaintenance.ClearInternetExplorerCache = $true
         } else {
             Write-Warning -Message 'Unable to clear Internet Explorer cache as Control Panel applet not available.'
