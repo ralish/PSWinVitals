@@ -834,9 +834,6 @@ Function Get-InstalledPrograms {
     Add-NativeMethods
 
     $Results = New-Object -TypeName Collections.ArrayList
-    $TypeName = 'PSWinVitals.InstalledProgram'
-
-    Update-TypeData -TypeName $TypeName -DefaultDisplayPropertySet @('Name', 'Publisher', 'Version') -Force
 
     # Programs installed system-wide in native bitness
     $ComputerNativeRegPath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
@@ -881,7 +878,6 @@ Function Get-InstalledPrograms {
         }
 
         $Result = [PSCustomObject]@{
-            PSTypeName    = $TypeName
             PSPath        = $Program.PSPath
             Name          = $Program.DisplayName
             Publisher     = $null
@@ -891,6 +887,7 @@ Function Get-InstalledPrograms {
             Location      = $null
             Uninstall     = $null
         }
+        $Result.PSObject.TypeNames.Insert(0, 'PSWinVitals.InstalledProgram')
 
         if ($Program.PSObject.Properties['Publisher']) {
             $Result.Publisher = $Program.Publisher
