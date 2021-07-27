@@ -24,5 +24,268 @@
                 </TableRowEntries>
             </TableControl>
         </View>
+        <View>
+            <Name>PSWinVitals.VitalChecks</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.VitalChecks</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>FileSystemScans</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>ComponentStoreScan</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>SystemFileChecker</Label>
+                    </TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    if ($null -eq $_.FileSystemScans) { return 'Skipped' }
+                                    if ($_.FileSystemScans -eq $false) { return 'Missing dependency: Storage module' }
+
+                                    $ScanErrors = 0
+                                    foreach ($Scan in $_.FileSystemScans) {
+                                        if ($Scan.ExitCode -ne 0) {
+                                            $ScanErrors++
+                                        }
+                                    }
+
+                                    if ($ScanErrors -eq 0) { return 'Healthy' }
+                                    return '{0} error(s)' -f $ScanErrors
+                                </ScriptBlock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    if ($null -eq $_.ComponentStoreScan) { return 'Skipped' }
+                                    if ($_.ComponentStoreScan.ExitCode -eq 0) { return 'Healthy' }
+                                    return 'Error (RC: {0})' -f $_.ComponentStoreScan.ExitCode
+                                </ScriptBlock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    if ($null -eq $_.SystemFileChecker) { return 'Skipped' }
+                                    if ($_.SystemFileChecker.ExitCode -eq 0) { return 'Healthy' }
+                                    return 'Error (RC: {0})' -f $_.SystemFileChecker.ExitCode
+                                </ScriptBlock>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <View>
+            <Name>PSWinVitals.VitalInformation</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.VitalInformation</TypeName>
+            </ViewSelectedBy>
+            <ListControl>
+                <ListEntries>
+                    <ListEntry>
+                        <ListItems>
+                            <ListItem>
+                                <Label>ComputerInfo</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.ComputerInfo) { return 'Skipped' }
+                                    if (!$_.ComputerInfo) { return 'Missing dependency: Get-ComputerInfo cmdlet' }
+                                    return '{0} {1}' -f $_.ComputerInfo.WindowsProductName, $_.ComputerInfo.OSVersion
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>HypervisorInfo</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.HypervisorInfo) { return 'Skipped' }
+                                    if (!$_.HypervisorInfo) { return 'Not present or unknown' }
+                                    return $_.HypervisorInfo.Vendor
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>DevicesWithBadStatus</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.DevicesWithBadStatus) { return 'Skipped' }
+                                    if ($_.DevicesWithBadStatus -eq $false) { return 'Missing dependency: PnpDevice module' }
+                                    return '{0} device(s)' -f $_.DevicesWithBadStatus.Count
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>DevicesNotPresent</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.DevicesNotPresent) { return 'Skipped' }
+                                    if ($_.DevicesNotPresent -eq $false) { return 'Missing dependency: PnpDevice module' }
+                                    return '{0} device(s)' -f $_.DevicesNotPresent.Count
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>StorageVolumes</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.StorageVolumes) { return 'Skipped' }
+                                    if ($_.StorageVolumes -eq $false) { return 'Missing dependency: Storage module' }
+                                    return '{0} volume(s)' -f $_.StorageVolumes.Count
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>CrashDumps</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.CrashDumps) { return 'Skipped' }
+
+                                    $KernelDumps = $_.CrashDumps.Kernel.Minidumps.Count
+                                    if ($_.CrashDumps.Kernel.MemoryDump) {
+                                        $KernelDumps++
+                                    }
+
+                                    $ServiceDumps = $_.CrashDumps.Service.LocalSystem.Count +
+                                                    $_.CrashDumps.Service.LocalService.Count +
+                                                    $_.CrashDumps.Service.NetworkService.Count
+
+                                    return '{0} kernel dump(s), {1} service dump(s)' -f $KernelDumps, $ServiceDumps
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>ComponentStoreAnalysis</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.ComponentStoreAnalysis) { return 'Skipped' }
+                                    if ($_.ComponentStoreAnalysis.ExitCode -eq 0) { return 'Completed' }
+                                    return 'Error (RC: {0})' -f $_.ComponentStoreAnalysis.ExitCode
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>InstalledFeatures</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.InstalledFeatures) { return 'Skipped' }
+
+                                    if ($_.InstalledFeatures -eq $false) {
+                                        if ((Get-CimInstance -ClassName Win32_OperatingSystem).ProductType -gt 1) {
+                                            return 'Missing dependency: ServerManager module'
+                                        }
+                                        return 'N/A for Windows clients'
+                                    }
+
+                                    return '{0} feature(s)' -f $_.InstalledFeatures.Count
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>InstalledPrograms</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.InstalledPrograms) { return 'Skipped' }
+                                    return '{0} programs(s)' -f $_.InstalledPrograms.Count
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>EnvironmentVariables</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.EnvironmentVariables) { return 'Skipped' }
+                                    return '{0} system variable(s), {1} user variable(s)' -f $_.EnvironmentVariables.Machine.Count, $_.EnvironmentVariables.User.Count
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>WindowsUpdates</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.WindowsUpdates) { return 'Skipped' }
+                                    if ($_.WindowsUpdates -eq $false) { return 'Missing dependency: PSWindowsUpdate module' }
+                                    return 'Found {0} update(s)' -f $_.WindowsUpdates.Count
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>SysinternalsSuite</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.SysinternalsSuite) { return 'Skipped' }
+                                    if (!$_.SysinternalsSuite) { return 'Not present' }
+                                    return 'Present (Version: {0})' -f $_.SysinternalsSuite.Version
+                                </ScriptBlock>
+                            </ListItem>
+                        </ListItems>
+                    </ListEntry>
+                </ListEntries>
+            </ListControl>
+        </View>
+        <View>
+            <Name>PSWinVitals.VitalMaintenance</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.VitalMaintenance</TypeName>
+            </ViewSelectedBy>
+            <ListControl>
+                <ListEntries>
+                    <ListEntry>
+                        <ListItems>
+                            <ListItem>
+                                <Label>WindowsUpdates</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.WindowsUpdates) { return 'Skipped' }
+                                    if ($_.WindowsUpdates -eq $false) { return 'Missing dependency: PSWindowsUpdate module' }
+                                    return 'Installed {0} update(s)' -f $_.WindowsUpdates.Count
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>ComponentStoreCleanup</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.ComponentStoreCleanup) { return 'Skipped' }
+                                    if ($_.ComponentStoreCleanup.ExitCode -eq 0) { return 'Completed' }
+                                    return 'Error (RC: {0})' -f $_.ComponentStoreCleanup.ExitCode
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>PowerShellHelp</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.PowerShellHelp) { return 'Skipped' }
+                                    if ($_.PowerShellHelp -eq $true) { return 'Completed' }
+                                    return 'Completed with some errors'
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>SysinternalsSuite</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.SysinternalsSuite) { return 'Skipped' }
+                                    if ($_.SysinternalsSuite -is [String]) { return 'Failed: {0}' -f $_.SysinternalsSuite }
+
+                                    if ($_.SysinternalsSuite.Updated) {
+                                        $Status = 'Updated'
+                                    } else {
+                                        $Status = 'Up-to-date'
+                                    }
+
+                                    return '{0} (Version: {1})' -f $Status, $_.SysinternalsSuite.Version
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>ClearInternetExplorerCache</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.ClearInternetExplorerCache) { return 'Skipped' }
+                                    if (!$_.ClearInternetExplorerCache) { return 'Missing dependency: inetcpl.cpl applet' }
+                                    return 'Completed'
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>DeleteErrorReports</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.DeleteErrorReports) { return 'Skipped' }
+                                    return 'Completed'
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>DeleteTemporaryFiles</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.DeleteTemporaryFiles) { return 'Skipped' }
+                                    return 'Completed'
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>EmptyRecycleBin</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.EmptyRecycleBin) { return 'Skipped' }
+                                    if ($_.EmptyRecycleBin -eq $false) { return 'Missing dependency: Clear-RecycleBin cmdlet' }
+                                    if ($_.EmptyRecycleBin -ne $true) { return 'Failed: {0}' -f $_.EmptyRecycleBin }
+                                    return 'Completed'
+                                </ScriptBlock>
+                            </ListItem>
+                        </ListItems>
+                    </ListEntry>
+                </ListEntries>
+            </ListControl>
+        </View>
     </ViewDefinitions>
 </Configuration>

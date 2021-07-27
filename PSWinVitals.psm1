@@ -204,6 +204,7 @@ Function Get-VitalInformation {
         SysinternalsSuite      = $null
         WindowsUpdates         = $null
     }
+    $VitalInformation.PSObject.TypeNames.Insert(0, 'PSWinVitals.VitalInformation')
 
     if ($Tasks['ComputerInfo']) {
         if (Get-Command -Name Get-ComputerInfo -ErrorAction Ignore) {
@@ -223,7 +224,7 @@ Function Get-VitalInformation {
     if ($Tasks['DevicesWithBadStatus']) {
         if (Get-Module -Name PnpDevice -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving problem devices ...'
-            $VitalInformation.DevicesWithBadStatus = Get-PnpDevice | Where-Object { $_.Status -in ('Degraded', 'Error') }
+            $VitalInformation.DevicesWithBadStatus = @(Get-PnpDevice | Where-Object { $_.Status -in ('Degraded', 'Error') })
         } else {
             Write-Warning -Message 'Unable to retrieve problem devices as PnpDevice module not available.'
             $VitalInformation.DevicesWithBadStatus = $false
@@ -233,7 +234,7 @@ Function Get-VitalInformation {
     if ($Tasks['DevicesNotPresent']) {
         if (Get-Module -Name PnpDevice -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving not present devices ...'
-            $VitalInformation.DevicesNotPresent = Get-PnpDevice | Where-Object { $_.Status -eq 'Unknown' }
+            $VitalInformation.DevicesNotPresent = @(Get-PnpDevice | Where-Object { $_.Status -eq 'Unknown' })
         } else {
             Write-Warning -Message 'Unable to retrieve not present devices as PnpDevice module not available.'
             $VitalInformation.DevicesNotPresent = $false
@@ -243,7 +244,7 @@ Function Get-VitalInformation {
     if ($Tasks['StorageVolumes']) {
         if (Get-Module -Name Storage -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving storage volumes summary ...'
-            $VitalInformation.StorageVolumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' }
+            $VitalInformation.StorageVolumes = @(Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' })
         } else {
             Write-Warning -Message 'Unable to retrieve storage volumes summary as Storage module not available.'
             $VitalInformation.StorageVolumes = $false
@@ -274,7 +275,7 @@ Function Get-VitalInformation {
         if ((Get-WindowsProductType) -gt 1) {
             if (Get-Module -Name ServerManager -ListAvailable) {
                 Write-Host -ForegroundColor Green -Object 'Retrieving installed features ...'
-                $VitalInformation.InstalledFeatures = Get-WindowsFeature | Where-Object { $_.Installed }
+                $VitalInformation.InstalledFeatures = @(Get-WindowsFeature | Where-Object { $_.Installed })
             } else {
                 Write-Warning -Message 'Unable to retrieve installed features as ServerManager module not available.'
                 $VitalInformation.InstalledFeatures = $false
@@ -308,7 +309,13 @@ Function Get-VitalInformation {
     if ($Tasks['WindowsUpdates']) {
         if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
             Write-Host -ForegroundColor Green -Object 'Retrieving Windows updates ...'
-            $VitalInformation.WindowsUpdates = Get-WindowsUpdate @WUParameters
+            $WindowsUpdates = Get-WindowsUpdate @WUParameters
+
+            if ($null -ne $WindowsUpdates -and $WindowsUpdates.Count -gt 0) {
+                $VitalInformation.WindowsUpdates = New-Object -TypeName Collections.ArrayList -ArgumentList $WindowsUpdates
+            } else {
+                $VitalInformation.WindowsUpdates = New-Object -TypeName Collections.ArrayList
+            }
         } else {
             Write-Warning -Message 'Unable to retrieve Windows updates as PSWindowsUpdate module not available.'
             $VitalInformation.WindowsUpdates = $false
@@ -458,6 +465,7 @@ Function Invoke-VitalChecks {
         FileSystemScans    = $null
         SystemFileChecker  = $null
     }
+    $VitalChecks.PSObject.TypeNames.Insert(0, 'PSWinVitals.VitalChecks')
 
     if ($Tasks['FileSystemScans']) {
         if (Get-Module -Name Storage -ListAvailable) {
@@ -663,6 +671,7 @@ Function Invoke-VitalMaintenance {
         SysinternalsSuite          = $null
         WindowsUpdates             = $null
     }
+    $VitalMaintenance.PSObject.TypeNames.Insert(0, 'PSWinVitals.VitalMaintenance')
 
     if ($Tasks['WindowsUpdates']) {
         try {
@@ -674,7 +683,13 @@ Function Invoke-VitalMaintenance {
 
         if ($null -eq $VitalMaintenance.WindowsUpdates) {
             Write-Host -ForegroundColor Green -Object 'Installing Windows updates ...'
-            $VitalMaintenance.WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll @WUParameters
+            $WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll @WUParameters
+
+            if ($null -ne $WindowsUpdates -and $WindowsUpdates.Count -gt 0) {
+                $VitalMaintenance.WindowsUpdates = New-Object -TypeName Collections.ArrayList -ArgumentList $WindowsUpdates
+            } else {
+                $VitalMaintenance.WindowsUpdates = New-Object -TypeName Collections.ArrayList
+            }
         }
     }
 
@@ -979,7 +994,7 @@ Function Get-KernelCrashDumps {
     }
 
     if (Test-Path -Path $MinidumpDir -PathType Container) {
-        $KernelCrashDumps.Minidumps = Get-ChildItem -Path $MinidumpDir
+        $KernelCrashDumps.Minidumps = @(Get-ChildItem -Path $MinidumpDir)
     }
 
     return $KernelCrashDumps
@@ -1002,19 +1017,19 @@ Function Get-ServiceCrashDumps {
     $NetworkServicePath = Join-Path -Path $env:SystemRoot -ChildPath 'ServiceProfiles\NetworkService\AppData\Local\CrashDumps'
 
     if (Test-Path -Path $LocalSystemPath -PathType Container) {
-        $ServiceCrashDumps.LocalSystem = Get-ChildItem -Path $LocalSystemPath
+        $ServiceCrashDumps.LocalSystem = @(Get-ChildItem -Path $LocalSystemPath)
     } else {
         Write-Verbose -Message ("[{0}] The crash dumps path for the LocalSystem account doesn't exist." -f $LogPrefix)
     }
 
     if (Test-Path -Path $LocalServicePath -PathType Container) {
-        $ServiceCrashDumps.LocalService = Get-ChildItem -Path $LocalServicePath
+        $ServiceCrashDumps.LocalService = @(Get-ChildItem -Path $LocalServicePath)
     } else {
         Write-Verbose -Message ("[{0}] The crash dumps path for the LocalService account doesn't exist." -f $LogPrefix)
     }
 
     if (Test-Path -Path $NetworkServicePath -PathType Container) {
-        $ServiceCrashDumps.NetworkService = Get-ChildItem -Path $NetworkServicePath
+        $ServiceCrashDumps.NetworkService = @(Get-ChildItem -Path $NetworkServicePath)
     } else {
         Write-Verbose -Message ("[{0}] The crash dumps path for the NetworkService account doesn't exist." -f $LogPrefix)
     }
