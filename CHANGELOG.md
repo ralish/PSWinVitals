@@ -1,6 +1,12 @@
 Changelog
 =========
 
+v0.6.1
+------
+
+- `Get-VitalInformation`: Fix array passing bug to the `ArrayList` constructor on retrieving Windows Updates
+- `Invoke-VitalMaintenance`: Fix array passing bug to the `ArrayList` constructor on installing Windows Updates
+
 v0.6.0
 ------
 
