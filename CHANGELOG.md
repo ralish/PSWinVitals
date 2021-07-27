@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.6.0
+------
+
+- **All commands**: Add type format data so default output is much easier to parse
+
 v0.5.1
 ------
 
