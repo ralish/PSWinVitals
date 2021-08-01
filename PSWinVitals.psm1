@@ -300,10 +300,20 @@ Function Get-VitalInformation {
         $EnvironmentVariables.PSObject.TypeNames.Insert(0, 'PSWinVitals.EnvironmentVariables')
 
         Write-Host -ForegroundColor Green -Object 'Retrieving system environment variables ...'
-        $EnvironmentVariables.Machine = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::Machine)
+        $Machine = [Ordered]@{ }
+        $MachineVariables = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::Machine)
+        foreach ($Variable in ($MachineVariables.Keys | Sort-Object)) {
+            $Machine[$Variable] = $MachineVariables[$Variable]
+        }
+        $EnvironmentVariables.Machine = $Machine
 
         Write-Host -ForegroundColor Green -Object 'Retrieving user environment variables ...'
-        $EnvironmentVariables.User = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::User)
+        $User = [Ordered]@{ }
+        $UserVariables = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::User)
+        foreach ($Variable in ($UserVariables.Keys | Sort-Object)) {
+            $User[$Variable] = $UserVariables[$Variable]
+        }
+        $EnvironmentVariables.User = $User
 
         $VitalInformation.EnvironmentVariables = $EnvironmentVariables
     }
