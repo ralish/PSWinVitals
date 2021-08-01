@@ -343,11 +343,9 @@ Function Get-VitalInformation {
 
         if (Test-Path -Path $InstallDir -PathType Container) {
             $Sysinternals = [PSCustomObject]@{
-                Path    = $null
+                Path    = $InstallDir
                 Version = $null
-                Updated = $false
             }
-            $Sysinternals.Path = $InstallDir
 
             Write-Host -ForegroundColor Green -Object 'Retrieving Sysinternals Suite version ...'
             $VersionFile = Join-Path -Path $InstallDir -ChildPath 'Version.txt'
@@ -811,7 +809,7 @@ Function Get-HypervisorInfo {
         ToolsVersion = $null
     }
 
-    $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem
+    $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -Verbose:$false
     $Manufacturer = $ComputerSystem.Manufacturer
     $Model = $ComputerSystem.Model
 
@@ -860,7 +858,7 @@ Function Get-InstalledPrograms {
 
     Add-NativeMethods
 
-    $Results = New-Object -TypeName Collections.ArrayList
+    $InstalledPrograms = New-Object -TypeName Collections.ArrayList
 
     # Programs installed system-wide in native bitness
     $ComputerNativeRegPath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
@@ -904,7 +902,7 @@ Function Get-InstalledPrograms {
             continue
         }
 
-        $Result = [PSCustomObject]@{
+        $InstalledProgram = [PSCustomObject]@{
             PSPath        = $Program.PSPath
             Name          = $Program.DisplayName
             Publisher     = $null
@@ -914,10 +912,10 @@ Function Get-InstalledPrograms {
             Location      = $null
             Uninstall     = $null
         }
-        $Result.PSObject.TypeNames.Insert(0, 'PSWinVitals.InstalledProgram')
+        $InstalledProgram.PSObject.TypeNames.Insert(0, 'PSWinVitals.InstalledProgram')
 
         if ($Program.PSObject.Properties['Publisher']) {
-            $Result.Publisher = $Program.Publisher
+            $InstalledProgram.Publisher = $Program.Publisher
         }
 
         # Try and convert the InstallDate value to a DateTime
@@ -925,47 +923,47 @@ Function Get-InstalledPrograms {
             $RegInstallDate = $Program.InstallDate
             if ($RegInstallDate -match '^[0-9]{8}') {
                 try {
-                    $Result.InstallDate = New-Object -TypeName DateTime -ArgumentList $RegInstallDate.Substring(0, 4), $RegInstallDate.Substring(4, 2), $RegInstallDate.Substring(6, 2)
+                    $InstalledProgram.InstallDate = New-Object -TypeName DateTime -ArgumentList $RegInstallDate.Substring(0, 4), $RegInstallDate.Substring(4, 2), $RegInstallDate.Substring(6, 2)
                 } catch { }
             }
 
-            if (!$Result.InstallDate) {
+            if (!$InstalledProgram.InstallDate) {
                 Write-Warning -Message ('[{0}] Registry key has invalid value for InstallDate: {1}' -f $Program.DisplayName, $RegInstallDate)
             }
         }
 
         # Fall back to the last write time of the registry key
-        if (!$Result.InstallDate) {
+        if (!$InstalledProgram.InstallDate) {
             [UInt64]$RegLastWriteTime = 0
             $Status = [PSWinVitals.NativeMethods]::RegQueryInfoKey($UninstallKey.Handle, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [ref]$RegLastWriteTime)
 
             if ($Status -eq 0) {
-                $Result.InstallDate = [DateTime]::FromFileTime($RegLastWriteTime)
+                $InstalledProgram.InstallDate = [DateTime]::FromFileTime($RegLastWriteTime)
             } else {
                 Write-Warning -Message ('[{0}] Retrieving registry key last write time failed with status: {1}' -f $Program.DisplayName, $Status)
             }
         }
 
         if ($Program.PSObject.Properties['EstimatedSize']) {
-            $Result.EstimatedSize = $Program.EstimatedSize
+            $InstalledProgram.EstimatedSize = $Program.EstimatedSize
         }
 
         if ($Program.PSObject.Properties['DisplayVersion']) {
-            $Result.Version = $Program.DisplayVersion
+            $InstalledProgram.Version = $Program.DisplayVersion
         }
 
         if ($Program.PSObject.Properties['InstallLocation']) {
-            $Result.Location = $Program.InstallLocation
+            $InstalledProgram.Location = $Program.InstallLocation
         }
 
         if ($Program.PSObject.Properties['UninstallString']) {
-            $Result.Uninstall = $Program.UninstallString
+            $InstalledProgram.Uninstall = $Program.UninstallString
         }
 
-        $null = $Results.Add($Result)
+        $null = $InstalledPrograms.Add($InstalledProgram)
     }
 
-    return ($Results | Sort-Object -Property Name)
+    return , @($InstalledPrograms | Sort-Object -Property Name)
 }
 
 Function Get-KernelCrashDumps {
@@ -989,17 +987,17 @@ Function Get-KernelCrashDumps {
             $DumpFile = $CrashControl.DumpFile
         } else {
             $DumpFile = Join-Path -Path $env:SystemRoot -ChildPath 'MEMORY.DMP'
-            Write-Warning -Message ("[{0}] The DumpFile value doesn't exist in CrashControl so we're guessing the location." -f $LogPrefix)
+            Write-Warning -Message ("[{0}] Guessing the location as DumpFile value doesn't exist under the CrashControl registry key." -f $LogPrefix)
         }
 
         if ($CrashControl.PSObject.Properties['MinidumpDir']) {
             $MinidumpDir = $CrashControl.MinidumpDir
         } else {
             $DumpFile = Join-Path -Path $env:SystemRoot -ChildPath 'Minidump'
-            Write-Warning -Message ("[{0}]The MinidumpDir value doesn't exist in CrashControl so we're guessing the location." -f $LogPrefix)
+            Write-Warning -Message ("[{0}] Guessing the location as MinidumpDir value doesn't exist under CrashControl registry key." -f $LogPrefix)
         }
     } else {
-        Write-Warning -Message ("[{0}]The CrashControl key doesn't exist in the Registry so we're guessing dump locations." -f $LogPrefix)
+        Write-Warning -Message ("[{0}] Guessing dump locations as the CrashControl registry key doesn't exist." -f $LogPrefix)
     }
 
     if (Test-Path -Path $DumpFile -PathType Leaf) {
@@ -1113,7 +1111,7 @@ Function Invoke-CHKDSK {
         $null = $Results.Add($CHKDSK)
     }
 
-    return $Results
+    return , @($Results)
 }
 
 Function Invoke-DISM {
@@ -1387,7 +1385,7 @@ Function Get-WindowsProductType {
     [CmdletBinding()]
     Param()
 
-    return (Get-CimInstance -ClassName Win32_OperatingSystem).ProductType
+    return (Get-CimInstance -ClassName Win32_OperatingSystem -Verbose:$false).ProductType
 }
 
 Function Test-IsAdministrator {
@@ -1405,7 +1403,7 @@ Function Test-IsWindows64bit {
     [CmdletBinding()]
     Param()
 
-    if ((Get-CimInstance -ClassName Win32_OperatingSystem).OSArchitecture -eq '64-bit') {
+    if ((Get-CimInstance -ClassName Win32_OperatingSystem -Verbose:$false).OSArchitecture -eq '64-bit') {
         return $true
     }
     return $false
