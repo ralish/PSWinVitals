@@ -2,6 +2,121 @@
 <Configuration>
     <ViewDefinitions>
         <View>
+            <Name>PSWinVitals.CHKDSK</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.CHKDSK</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>Output</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>Operation</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>VolumePath</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>'{0} lines' -f $_.Output.Count</ScriptBlock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>ExitCode</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <View>
+            <Name>PSWinVitals.CrashDumps</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.CrashDumps</TypeName>
+            </ViewSelectedBy>
+            <ListControl>
+                <ListEntries>
+                    <ListEntry>
+                        <ListItems>
+                            <ListItem>
+                                <Label>Kernel</Label>
+                                <ScriptBlock>
+                                    $CrashDumps = $_.Kernel.Minidumps.Count
+                                    if ($_.Kernel.MemoryDump) { $CrashDumps++ }
+                                    return '{0} dump(s)' -f $CrashDumps
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>Service</Label>
+                                <ScriptBlock>
+                                    $CrashDumps = $_.Service.LocalSystem.Count +
+                                                  $_.Service.LocalService.Count +
+                                                  $_.Service.NetworkService.Count
+                                    return '{0} dump(s)' -f $CrashDumps
+                                </ScriptBlock>
+                            </ListItem>
+                        </ListItems>
+                    </ListEntry>
+                </ListEntries>
+            </ListControl>
+        </View>
+        <View>
+            <Name>PSWinVitals.DISM</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.DISM</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>Output</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>Operation</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>'{0} lines' -f $_.Output.Count</ScriptBlock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>ExitCode</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <View>
+            <Name>PSWinVitals.EnvironmentVariables</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.EnvironmentVariables</TypeName>
+            </ViewSelectedBy>
+            <ListControl>
+                <ListEntries>
+                    <ListEntry>
+                        <ListItems>
+                            <ListItem>
+                                <PropertyName>Machine</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <PropertyName>User</PropertyName>
+                            </ListItem>
+                        </ListItems>
+                    </ListEntry>
+                </ListEntries>
+            </ListControl>
+        </View>
+        <View>
             <Name>PSWinVitals.InstalledProgram</Name>
             <ViewSelectedBy>
                 <TypeName>PSWinVitals.InstalledProgram</TypeName>
@@ -25,26 +140,94 @@
             </TableControl>
         </View>
         <View>
-            <Name>PSWinVitals.VitalChecks</Name>
+            <Name>PSWinVitals.KernelCrashDumps</Name>
             <ViewSelectedBy>
-                <TypeName>PSWinVitals.VitalChecks</TypeName>
+                <TypeName>PSWinVitals.KernelCrashDumps</TypeName>
+            </ViewSelectedBy>
+            <ListControl>
+                <ListEntries>
+                    <ListEntry>
+                        <ListItems>
+                            <ListItem>
+                                <Label>MemoryDump</Label>
+                                <ScriptBlock>if ($_.MemoryDump) { 'Present' } else { 'Absent' }</ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>Minidumps</Label>
+                                <ScriptBlock>'{0} minidump(s)' -f $_.Minidumps.Count</ScriptBlock>
+                            </ListItem>
+                        </ListItems>
+                    </ListEntry>
+                </ListEntries>
+            </ListControl>
+        </View>
+        <View>
+            <Name>PSWinVitals.ServiceCrashDumps</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.ServiceCrashDumps</TypeName>
+            </ViewSelectedBy>
+            <ListControl>
+                <ListEntries>
+                    <ListEntry>
+                        <ListItems>
+                            <ListItem>
+                                <Label>LocalSystem</Label>
+                                <ScriptBlock>'{0} dump(s)' -f $_.LocalSystem.Count</ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>LocalService</Label>
+                                <ScriptBlock>'{0} dump(s)' -f $_.LocalService.Count</ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>NetworkService</Label>
+                                <ScriptBlock>'{0} dump(s)' -f $_.NetworkService.Count</ScriptBlock>
+                            </ListItem>
+                        </ListItems>
+                    </ListEntry>
+                </ListEntries>
+            </ListControl>
+        </View>
+        <View>
+            <Name>PSWinVitals.SFC</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.SFC</TypeName>
             </ViewSelectedBy>
             <TableControl>
                 <TableHeaders>
+                    <TableColumnHeader />
                     <TableColumnHeader>
-                        <Label>FileSystemScans</Label>
+                        <Label>Output</Label>
                     </TableColumnHeader>
-                    <TableColumnHeader>
-                        <Label>ComponentStoreScan</Label>
-                    </TableColumnHeader>
-                    <TableColumnHeader>
-                        <Label>SystemFileChecker</Label>
-                    </TableColumnHeader>
+                    <TableColumnHeader />
                 </TableHeaders>
                 <TableRowEntries>
                     <TableRowEntry>
                         <TableColumnItems>
                             <TableColumnItem>
+                                <PropertyName>Operation</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>'{0} lines' -f $_.Output.Count</ScriptBlock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>ExitCode</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <View>
+            <Name>PSWinVitals.VitalChecks</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.VitalChecks</TypeName>
+            </ViewSelectedBy>
+            <ListControl>
+                <ListEntries>
+                    <ListEntry>
+                        <ListItems>
+                            <ListItem>
+                                <Label>FileSystemScans</Label>
                                 <ScriptBlock>
                                     if ($null -eq $_.FileSystemScans) { return 'Skipped' }
                                     if ($_.FileSystemScans -eq $false) { return 'Missing dependency: Storage module' }
@@ -59,25 +242,27 @@
                                     if ($ScanErrors -eq 0) { return 'Healthy' }
                                     return '{0} error(s)' -f $ScanErrors
                                 </ScriptBlock>
-                            </TableColumnItem>
-                            <TableColumnItem>
+                            </ListItem>
+                            <ListItem>
+                                <Label>ComponentStoreScan</Label>
                                 <ScriptBlock>
                                     if ($null -eq $_.ComponentStoreScan) { return 'Skipped' }
                                     if ($_.ComponentStoreScan.ExitCode -eq 0) { return 'Healthy' }
                                     return 'Error (RC: {0})' -f $_.ComponentStoreScan.ExitCode
                                 </ScriptBlock>
-                            </TableColumnItem>
-                            <TableColumnItem>
+                            </ListItem>
+                            <ListItem>
+                                <Label>SystemFileChecker</Label>
                                 <ScriptBlock>
                                     if ($null -eq $_.SystemFileChecker) { return 'Skipped' }
                                     if ($_.SystemFileChecker.ExitCode -eq 0) { return 'Healthy' }
                                     return 'Error (RC: {0})' -f $_.SystemFileChecker.ExitCode
                                 </ScriptBlock>
-                            </TableColumnItem>
-                        </TableColumnItems>
-                    </TableRowEntry>
-                </TableRowEntries>
-            </TableControl>
+                            </ListItem>
+                        </ListItems>
+                    </ListEntry>
+                </ListEntries>
+            </ListControl>
         </View>
         <View>
             <Name>PSWinVitals.VitalInformation</Name>

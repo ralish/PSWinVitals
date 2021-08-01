@@ -252,10 +252,11 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['CrashDumps']) {
-        [PSCustomObject]$CrashDumps = [PSCustomObject]@{
+        $CrashDumps = [PSCustomObject]@{
             Kernel  = $null
             Service = $null
         }
+        $CrashDumps.PSObject.TypeNames.Insert(0, 'PSWinVitals.CrashDumps')
 
         Write-Host -ForegroundColor Green -Object 'Retrieving kernel crash dumps ...'
         $CrashDumps.Kernel = Get-KernelCrashDumps
@@ -292,10 +293,11 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['EnvironmentVariables']) {
-        [PSCustomObject]$EnvironmentVariables = [PSCustomObject]@{
+        $EnvironmentVariables = [PSCustomObject]@{
             Machine = $null
             User    = $null
         }
+        $EnvironmentVariables.PSObject.TypeNames.Insert(0, 'PSWinVitals.EnvironmentVariables')
 
         Write-Host -ForegroundColor Green -Object 'Retrieving system environment variables ...'
         $EnvironmentVariables.Machine = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::Machine)
@@ -966,6 +968,7 @@ Function Get-KernelCrashDumps {
         MemoryDump = $null
         Minidumps  = $null
     }
+    $KernelCrashDumps.PSObject.TypeNames.Insert(0, 'PSWinVitals.KernelCrashDumps')
 
     $CrashControlRegPath = 'HKLM:\System\CurrentControlSet\Control\CrashControl'
 
@@ -1011,6 +1014,7 @@ Function Get-ServiceCrashDumps {
         LocalService   = $null
         NetworkService = $null
     }
+    $ServiceCrashDumps.PSObject.TypeNames.Insert(0, 'PSWinVitals.ServiceCrashDumps')
 
     $LocalSystemPath = Join-Path -Path $env:SystemRoot -ChildPath 'System32\Config\SystemProfile\AppData\Local\CrashDumps'
     $LocalServicePath = Join-Path -Path $env:SystemRoot -ChildPath 'ServiceProfiles\LocalService\AppData\Local\CrashDumps'
@@ -1078,6 +1082,7 @@ Function Invoke-CHKDSK {
             Output     = $null
             ExitCode   = $null
         }
+        $CHKDSK.PSObject.TypeNames.Insert(0, 'PSWinVitals.CHKDSK')
 
         Write-Verbose -Message ('[{0}] Running {1} operation on: {2}' -f $LogPrefix, $Operation.ToLower(), $VolumePath)
         $ChkDskPath = Join-Path -Path $env:SystemRoot -ChildPath 'System32\chkdsk.exe'
@@ -1117,6 +1122,7 @@ Function Invoke-DISM {
         Output    = $null
         ExitCode  = $null
     }
+    $DISM.PSObject.TypeNames.Insert(0, 'PSWinVitals.DISM')
 
     Write-Verbose -Message ('[{0}] Running {1} operation ...' -f $LogPrefix, $Operation)
     $DismPath = Join-Path -Path $env:SystemRoot -ChildPath 'System32\dism.exe'
@@ -1182,6 +1188,7 @@ Function Invoke-SFC {
         Output    = $null
         ExitCode  = $null
     }
+    $SFC.PSObject.TypeNames.Insert(0, 'PSWinVitals.SFC')
 
     $AllocatedConsole = $false
     $DefaultOutputEncoding = [Console]::OutputEncoding
