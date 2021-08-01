@@ -43,7 +43,7 @@ Function Get-VitalInformation {
         - HypervisorInfo
           Attempts to detect if the system is running under a hypervisor.
 
-          Currently we only detect Microsoft Hyper-V and VMware hypervisors.
+          Currently only Microsoft Hyper-V and VMware hypervisors are detected.
 
         - InstalledFeatures
           Retrieves information on installed Windows features.
@@ -65,7 +65,7 @@ Function Get-VitalInformation {
 
           The version is retrieved from the Version.txt file created by Invoke-VitalMaintenance.
 
-          The location where we check if the utilities are installed depends on the OS architecture:
+          The location to check if the utilities are installed depends on the OS architecture:
           * 32-bit: The "Sysinternals" folder in the "Program Files" directory
           * 64-bit: The "Sysinternals" folder in the "Program Files (x86)" directory
 
@@ -714,8 +714,8 @@ Function Invoke-VitalMaintenance {
             Update-Help -Force -ErrorAction Stop
             $VitalMaintenance.PowerShellHelp = $true
         } catch {
-            # Often we'll fail to update help data for a few modules because they haven't defined
-            # the HelpInfoUri key in their manifest. There's nothing that can be done to fix this.
+            # Many modules don't define the HelpInfoUri key in their manifest, which will cause
+            # Update-Help to log an error. This should really be treated as a warning.
             $VitalMaintenance.PowerShellHelp = $_.Exception.Message
         }
     }
@@ -728,7 +728,8 @@ Function Invoke-VitalMaintenance {
     if ($Tasks['ClearInternetExplorerCache']) {
         if (Get-Command -Name inetcpl.cpl -ErrorAction Ignore) {
             Write-Host -ForegroundColor Green -Object 'Clearing Internet Explorer cache ...'
-            # More details on the bitmask here: https://github.com/SeleniumHQ/selenium/blob/master/cpp/iedriver/BrowserFactory.cpp
+            # More details on the bitmask here:
+            # https://github.com/SeleniumHQ/selenium/blob/master/cpp/iedriver/BrowserFactory.cpp
             $RunDll32Path = Join-Path -Path $env:SystemRoot -ChildPath 'System32\rundll32.exe'
             Start-Process -FilePath $RunDll32Path -ArgumentList 'inetcpl.cpl,ClearMyTracksByProcess', '9FF' -Wait
             $VitalMaintenance.ClearInternetExplorerCache = $true
@@ -780,9 +781,9 @@ Function Invoke-VitalMaintenance {
                 Clear-RecycleBin -Force -ErrorAction Stop
                 $VitalMaintenance.EmptyRecycleBin = $true
             } catch [ComponentModel.Win32Exception] {
-                # Sometimes clearing the Recycle Bin fails with an exception which seems to indicate
-                # the Recycle Bin folder doesn't exist. If that happens we only get a generic E_FAIL
-                # exception, so checking the actual exception message seems to be the best method.
+                # Sometimes clearing the Recycle Bin fails with an exception indicating the Recycle
+                # Bin directory doesn't exist. Only a generic E_FAIL exception is thrown though, so
+                # inspect the actual exception message to be sure.
                 if ($_.Exception.Message -eq 'The system cannot find the path specified') {
                     $VitalMaintenance.EmptyRecycleBin = $true
                 } else {
@@ -813,7 +814,8 @@ Function Get-HypervisorInfo {
     $Manufacturer = $ComputerSystem.Manufacturer
     $Model = $ComputerSystem.Model
 
-    # Useful: http://git.annexia.org/?p=virt-what.git;a=blob_plain;f=virt-what.in;hb=HEAD
+    # Useful:
+    # http://git.annexia.org/?p=virt-what.git;a=blob_plain;f=virt-what.in;hb=HEAD
     if ($Manufacturer -eq 'Microsoft Corporation' -and $Model -eq 'Virtual Machine') {
         $HypervisorInfo.Vendor = 'Microsoft'
         $HypervisorInfo.Hypervisor = 'Hyper-V'
@@ -871,7 +873,7 @@ Function Get-InstalledPrograms {
         $UninstallKeys += Get-ChildItem -Path $ComputerWow64RegPath
     }
 
-    # Filter out all the uninteresting installation results
+    # Filter out all the uninteresting installations
     foreach ($UninstallKey in $UninstallKeys) {
         $Program = Get-ItemProperty -Path $UninstallKey.PSPath
 
@@ -880,9 +882,7 @@ Function Get-InstalledPrograms {
             continue
         }
 
-        # Ensure the program either:
-        # - Has an uninstall command
-        # - Is marked as non-removable
+        # Skip any program without an uninstall command which is not marked non-removable
         if (!($Program.PSObject.Properties['UninstallString'] -or ($Program.PSObject.Properties['NoRemove'] -and $Program.NoRemove -eq 1))) {
             continue
         }
@@ -1060,12 +1060,12 @@ Function Invoke-CHKDSK {
     # thin wrapper around CHKDSK and only exposes a small subset of its underlying functionality.
     $LogPrefix = 'CHKDSK'
 
-    # File systems we are able to check for errors (Verify)
+    # Supported file systems for scanning for errors (Verify)
     $SupportedFileSystems = @('exFAT', 'FAT', 'FAT16', 'FAT32', 'NTFS', 'NTFS4', 'NTFS5')
-    # File systems we are able to fix any errors (Scan)
+    # Supported file system for scanning for errors and fixing (Scan)
     #
-    # FAT volumes don't support online repair so fixing errors means dismounting the volume. As
-    # CHKDSK has no option equivalent to "dismount only if safe" we don't support fixing errors.
+    # FAT volumes don't support online repair so fixing errors means dismounting the volume. No
+    # parameter equivalent to "dismount only if safe" exists so for now there's no support.
     $ScanSupportedFileSystems = @('NTFS', 'NTFS4', 'NTFS5')
 
     $Volumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.FileSystem -in $SupportedFileSystems }
@@ -1122,8 +1122,8 @@ Function Invoke-DISM {
         [String]$Operation
     )
 
-    # The Dism PowerShell module doesn't appear to expose the /Cleanup-Image family of parameters
-    # available in the underlying Dism.exe utility, so we have to fallback to invoking it directly.
+    # The Dism module doesn't include cmdlets which map to the /Cleanup-Image functionality in the
+    # underlying Dism.exe utility, so for now it's necessary to invoke it directly.
     $LogPrefix = 'DISM'
     $DISM = [PSCustomObject]@{
         Operation = $Operation
@@ -1157,25 +1157,26 @@ Function Invoke-SFC {
         SFC is a horror show when it comes to capturing its output:
 
         1. In contrast to most (every?) other built-in Windows console application, SFC output is
-           UTF-16LE. PowerShell is probably expecting windows-1252 (a superset of ASCII), and so the
-           output will be decoded incorrectly. We can fix this by temporarily setting to Unicode the
-           [Console]::OutputEncoding property to specify the encoding used by native applications.
+           UTF-16LE. PowerShell is probably expecting windows-1252 (a superset of ASCII) and so the
+           output will be decoded incorrectly. Fix this by temporarily setting the OutputEncoding
+           property of the Console static class to Unicode, which specifies the character encoding
+           used by native applications.
 
-        2. It outputs \r\r\n sequences for newlines (yes, really). PowerShell will interpret this as
-           two newlines, so we need to massage the output a little to remove those extra newlines.
+        2. It outputs \r\r\n sequences for newlines (yes, really). PowerShell interprets this
+           character sequence as two newlines so the output must be filtered to remove the extras.
 
-        3. When running in a remote session with WinRM we're not running under a console, which will
+        3. When running in a remote session via WinRM we're not running under a console, which will
            result in the attempt to set [Console]::OutputEncoding throwing an exception due to an
            invalid handle. Actually, that's not entirely true; it will work when setting it to the
            [Text.Encoding]::Unicode enumeration (i.e. UTF-16LE), which is what we want, but will
-           throw the error when we attempt to change it to anything else (like its original value).
-           So we'll get broken output for any subsequent native app that's called other than SFC.
+           throw an exception on changing it back to anything else (including the original value).
+           The result is broken output for any subsequent native app that's called (except SFC).
 
            The solution to this craziness is to manually allocate a console with AllocConsole() and
-           free it with FreeConsole(). This will spawn a ConsoleHost.exe process which will allow us
-           to set [Console]::OutputEncoding without the referenced error. SFC spawns a Console Host
-           process itself if it doesn't inherit a console from the parent process, so this happens
-           anyway, except we attach the console to PowerShell and implicitly its children instead.
+           free it with FreeConsole(). This will spawn a ConsoleHost.exe process allowing us to set
+           [Console]::OutputEncoding without hitting an invalid handle exception. SFC will spawn a
+           Console Host itself anyway if it doesn't inherit a console from the parent process, so
+           this happens regardless; we're just attaching a console to PowerShell directly instead.
 
         Bonus extra confusion: you'll probably find SFC works just fine if you invoke it directly in
         PowerShell. That's because the problem only happens when *redirecting* the output. It seems
@@ -1292,9 +1293,9 @@ Function Update-Sysinternals {
     if (!$ExistingVersion -or ($DownloadedVersion -gt $ExistingVersion)) {
         Write-Verbose -Message ('[{0}] Extracting archive to: {1}' -f $LogPrefix, $InstallDir)
         Remove-Item -Path $InstallDir -Recurse -ErrorAction Ignore
-        # The -Force parameter shouldn't be necessary given we've removed the existing directory
-        # contents. Except sometimes the latest archive has files differing only by case. Permit
-        # overwriting of files to workaround this and hope that the overwritten file was older.
+        # The -Force parameter shouldn't be necessary given we've removed any existing files,
+        # except sometimes the archive has files differing only by case. Permit overwriting of
+        # files as a workaround and we just have to hope any overwritten files were older.
         Expand-ZipFile -FilePath $DownloadPath -DestinationPath $InstallDir -Force
         Set-Content -Path $VersionFile -Value $DownloadedVersion
         Remove-Item -Path $DownloadPath
@@ -1372,7 +1373,7 @@ Function Expand-ZipFile {
         [Switch]$Force
     )
 
-    # The Expand-Archive cmdlet is only available from v5.0
+    # The Expand-Archive cmdlet is only available from PowerShell v5.0
     if ($PSVersionTable.PSVersion.Major -ge 5) {
         Expand-Archive -Path $FilePath -DestinationPath $DestinationPath -Force:$Force
     } else {

@@ -37,8 +37,8 @@ The module exports three functions which handle inventory retrieval, health chec
 ### Invoke-VitalChecks
 
 - Run file system scans against all fixed volumes
-- Run Windows System File Checker (SFC)
 - Run Windows component store scan
+- Run Windows System File Checker (SFC)
 
 ### Invoke-VitalMaintenance
 
