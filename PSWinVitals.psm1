@@ -19,7 +19,7 @@ Function Get-VitalInformation {
           This task requires Windows PowerShell 5.1 or newer.
 
         - CrashDumps
-          Checks for any kernel or service account crash dumps.
+          Checks for any kernel, service, or user crash dumps.
 
           This task requires administrator privileges.
 
@@ -283,6 +283,7 @@ Function Get-VitalInformation {
         $CrashDumps = [PSCustomObject]@{
             Kernel  = $null
             Service = $null
+            User    = $null
         }
         $CrashDumps.PSObject.TypeNames.Insert(0, 'PSWinVitals.CrashDumps')
 
@@ -291,6 +292,9 @@ Function Get-VitalInformation {
 
         Write-Host -ForegroundColor Green -Object 'Retrieving service crash dumps ...'
         $CrashDumps.Service = Get-ServiceCrashDumps
+
+        Write-Host -ForegroundColor Green -Object 'Retrieving user crash dumps ...'
+        $CrashDumps.User = Get-UserCrashDumps
 
         $VitalInformation.CrashDumps = $CrashDumps
     }
@@ -1045,36 +1049,79 @@ Function Get-ServiceCrashDumps {
     Param()
 
     $LogPrefix = 'ServiceCrashDumps'
-    $ServiceCrashDumps = [PSCustomObject]@{
-        LocalSystem    = $null
-        LocalService   = $null
-        NetworkService = $null
-    }
-    $ServiceCrashDumps.PSObject.TypeNames.Insert(0, 'PSWinVitals.ServiceCrashDumps')
+    $ServiceCrashDumps = New-Object -TypeName Collections.ArrayList
 
-    $LocalSystemPath = Join-Path -Path $env:SystemRoot -ChildPath 'System32\Config\SystemProfile\AppData\Local\CrashDumps'
-    $LocalServicePath = Join-Path -Path $env:SystemRoot -ChildPath 'ServiceProfiles\LocalService\AppData\Local\CrashDumps'
-    $NetworkServicePath = Join-Path -Path $env:SystemRoot -ChildPath 'ServiceProfiles\NetworkService\AppData\Local\CrashDumps'
-
-    if (Test-Path -Path $LocalSystemPath -PathType Container) {
-        $ServiceCrashDumps.LocalSystem = @(Get-ChildItem -Path $LocalSystemPath)
-    } else {
-        Write-Verbose -Message ("[{0}] The crash dumps path for the LocalSystem account doesn't exist." -f $LogPrefix)
-    }
-
-    if (Test-Path -Path $LocalServicePath -PathType Container) {
-        $ServiceCrashDumps.LocalService = @(Get-ChildItem -Path $LocalServicePath)
-    } else {
-        Write-Verbose -Message ("[{0}] The crash dumps path for the LocalService account doesn't exist." -f $LogPrefix)
-    }
-
-    if (Test-Path -Path $NetworkServicePath -PathType Container) {
-        $ServiceCrashDumps.NetworkService = @(Get-ChildItem -Path $NetworkServicePath)
-    } else {
-        Write-Verbose -Message ("[{0}] The crash dumps path for the NetworkService account doesn't exist." -f $LogPrefix)
-    }
+    $null = $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-18' -Name 'LocalSystem' -LogPrefix $LogPrefix))
+    $null = $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-19' -Name 'LocalService' -LogPrefix $LogPrefix))
+    $null = $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-20' -Name 'NetworkService' -LogPrefix $LogPrefix))
 
     return $ServiceCrashDumps
+}
+
+Function Get-UserCrashDumps {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
+    [CmdletBinding()]
+    Param()
+
+    $LogPrefix = 'UserCrashDumps'
+    $UserCrashDumps = New-Object -TypeName Collections.ArrayList
+
+    $ProfileList = Get-Item -Path 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\ProfileList'
+    $UserSids = $ProfileList.GetSubKeyNames() | Where-Object { $_ -match '^S-1-5-21-' }
+    foreach ($UserSid in $UserSids) {
+        $null = $UserCrashDumps.Add((Get-UserProfileCrashDumps -Sid $UserSid -LogPrefix $LogPrefix))
+    }
+
+    return , @($UserCrashDumps)
+}
+
+Function Get-UserProfileCrashDumps {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory)]
+        [String]$Sid,
+
+        [ValidateNotNullOrEmpty()]
+        [String]$Name,
+
+        [ValidateNotNullOrEmpty()]
+        [String]$LogPrefix = 'UserProfileCrashDumps'
+    )
+
+    $UserProfileRegPath = Join-Path -Path 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\ProfileList' -ChildPath $Sid
+    try {
+        $UserProfile = Get-ItemProperty -Path $UserProfileRegPath -ErrorAction Stop
+    } catch {
+        Write-Warning -Message ('[{0}] Failed to retrieve user profile information for SID: {1}' -f $LogPrefix, $Sid)
+        return
+    }
+
+    if ($UserProfile.PSObject.Properties['ProfileImagePath']) {
+        $ProfileImagePath = $UserProfile.ProfileImagePath
+    } else {
+        Write-Warning -Message ('[{0}] User profile information has no ProfileImagePath for SID: {1}' -f $LogPrefix, $Sid)
+        return
+    }
+
+    if (!$Name) {
+        $Name = Split-Path -Path $ProfileImagePath -Leaf
+    }
+
+    $CrashDumps = [PSCustomObject]@{
+        Name       = $Name
+        Crashdumps = $null
+    }
+    $CrashDumps.PSObject.TypeNames.Insert(0, 'PSWinVitals.UserProfileCrashDumps')
+
+    $CrashDumpsPath = Join-Path -Path $ProfileImagePath -ChildPath 'AppData\Local\CrashDumps'
+    try {
+        $CrashDumps.CrashDumps = @(Get-ChildItem -Path $CrashDumpsPath -ErrorAction Stop)
+    } catch {
+        Write-Verbose -Message ('[{0}] The crash dumps path for the user does not exist: {1}' -f $LogPrefix, $Name)
+    }
+
+    return $CrashDumps
 }
 
 Function Invoke-CHKDSK {

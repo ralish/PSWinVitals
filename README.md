@@ -26,7 +26,7 @@ The module exports three functions which handle inventory retrieval, health chec
 - Retrieval of hardware devices with errors
 - Retrieval of hardware devices which are absent
 - Retrieval of fixed storage volume details
-- Check for kernel and service account crash dumps
+- Check for kernel, service, or user crash dumps
 - Analysis of the Windows component store
 - Retrieval of installed Windows features (Server SKUs only)
 - Retrieval of installed programs

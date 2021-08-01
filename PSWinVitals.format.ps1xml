@@ -54,12 +54,11 @@
                             </ListItem>
                             <ListItem>
                                 <Label>Service</Label>
-                                <ScriptBlock>
-                                    $CrashDumps = $_.Service.LocalSystem.Count +
-                                                  $_.Service.LocalService.Count +
-                                                  $_.Service.NetworkService.Count
-                                    return '{0} dump(s)' -f $CrashDumps
-                                </ScriptBlock>
+                                <ScriptBlock>return '{0} dump(s)' -f $_.Service.Dumps.Count</ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>User</Label>
+                                <ScriptBlock>return '{0} dump(s)' -f $_.User.Dumps.Count</ScriptBlock>
                             </ListItem>
                         </ListItems>
                     </ListEntry>
@@ -144,48 +143,26 @@
             <ViewSelectedBy>
                 <TypeName>PSWinVitals.KernelCrashDumps</TypeName>
             </ViewSelectedBy>
-            <ListControl>
-                <ListEntries>
-                    <ListEntry>
-                        <ListItems>
-                            <ListItem>
-                                <Label>MemoryDump</Label>
-                                <ScriptBlock>if ($_.MemoryDump) { 'Present' } else { 'Absent' }</ScriptBlock>
-                            </ListItem>
-                            <ListItem>
-                                <Label>Minidumps</Label>
-                                <ScriptBlock>'{0} minidump(s)' -f $_.Minidumps.Count</ScriptBlock>
-                            </ListItem>
-                        </ListItems>
-                    </ListEntry>
-                </ListEntries>
-            </ListControl>
-        </View>
-        <View>
-            <Name>PSWinVitals.ServiceCrashDumps</Name>
-            <ViewSelectedBy>
-                <TypeName>PSWinVitals.ServiceCrashDumps</TypeName>
-            </ViewSelectedBy>
-            <ListControl>
-                <ListEntries>
-                    <ListEntry>
-                        <ListItems>
-                            <ListItem>
-                                <Label>LocalSystem</Label>
-                                <ScriptBlock>'{0} dump(s)' -f $_.LocalSystem.Count</ScriptBlock>
-                            </ListItem>
-                            <ListItem>
-                                <Label>LocalService</Label>
-                                <ScriptBlock>'{0} dump(s)' -f $_.LocalService.Count</ScriptBlock>
-                            </ListItem>
-                            <ListItem>
-                                <Label>NetworkService</Label>
-                                <ScriptBlock>'{0} dump(s)' -f $_.NetworkService.Count</ScriptBlock>
-                            </ListItem>
-                        </ListItems>
-                    </ListEntry>
-                </ListEntries>
-            </ListControl>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader>
+                        <Label>MemoryDump</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <ScriptBlock>if ($_.MemoryDump) { $_.MemoryDump } else { 'Absent' }</ScriptBlock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>Minidumps</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
         </View>
         <View>
             <Name>PSWinVitals.SFC</Name>
@@ -211,6 +188,36 @@
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>ExitCode</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <View>
+            <Name>PSWinVitals.UserProfileCrashDumps</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.UserProfileCrashDumps</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                            <Label>DumpCount</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>Name</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>$_.CrashDumps.Count</ScriptBlock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>CrashDumps</PropertyName>
                             </TableColumnItem>
                         </TableColumnItems>
                     </TableRowEntry>
@@ -323,11 +330,10 @@
                                         $KernelDumps++
                                     }
 
-                                    $ServiceDumps = $_.CrashDumps.Service.LocalSystem.Count +
-                                                    $_.CrashDumps.Service.LocalService.Count +
-                                                    $_.CrashDumps.Service.NetworkService.Count
+                                    $ServiceDumps = $_.CrashDumps.Service.Dumps.Count
+                                    $UserDumps = $_.CrashDumps.User.Dumps.Count
 
-                                    return '{0} kernel dump(s), {1} service dump(s)' -f $KernelDumps, $ServiceDumps
+                                    return '{0} kernel dump(s), {1} service dump(s), {2} user dump(s)' -f $KernelDumps, $ServiceDumps, $UserDumps
                                 </ScriptBlock>
                             </ListItem>
                             <ListItem>
