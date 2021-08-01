@@ -1,6 +1,15 @@
 Changelog
 =========
 
+v0.6.2
+------
+
+- `Get-VitalInformation`: The `CrashDumps` task now also checks for crashdumps under each user profile
+- `Get-VitalInformation`: The `EnvironmentVariables` task now returns results sorted by variable name
+- `Get-VitalInformation`: Smarter handling of tasks requiring administrator privileges (see help)
+- Added additional type format data & tweaks to existing formats
+- Minor documentation updates & miscellaneous fixes
+
 v0.6.1
 ------
 
