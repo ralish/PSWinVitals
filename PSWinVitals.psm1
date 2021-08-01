@@ -109,6 +109,12 @@ Function Get-VitalInformation {
         - WindowsUpdates
         - SysinternalsSuite
 
+        When running without administrator privileges, the handling of tasks which require administrator privileges differs by selection method:
+        - ExcludeTasks (default)
+          Administrator tasks which were not explicitly excluded will be automatically excluded and a warning displayed.
+        - IncludeTasks
+          Administrator tasks will result in the command exiting with an error.
+
         .LINK
         https://github.com/ralish/PSWinVitals
     #>
@@ -184,9 +190,31 @@ Function Get-VitalInformation {
         }
     }
 
-    if ($Tasks['ComponentStoreAnalysis'] -or $Tasks['CrashDumps'] -or $Tasks['WindowsUpdates']) {
-        if (!(Test-IsAdministrator)) {
-            throw 'You must have administrator privileges to analyse the component store, retrieve crash dumps, or retrieve Windows updates.'
+    if (!(Test-IsAdministrator)) {
+        $AdminTasks = 'ComponentStoreAnalysis', 'CrashDumps', 'WindowsUpdates'
+        $SelectedAdminTasks = New-Object -TypeName Collections.ArrayList
+
+        if ($PSCmdlet.ParameterSetName -eq 'OptOut') {
+            foreach ($AdminTask in $AdminTasks) {
+                if ($Tasks[$AdminTask]) {
+                    $Tasks[$AdminTask] = $false
+                    $null = $SelectedAdminTasks.Add($AdminTask)
+                }
+            }
+
+            if ($SelectedAdminTasks.Count -gt 0) {
+                Write-Warning -Message ('Skipping tasks which require administrator privileges: {0}' -f [String]::Join(', ', $SelectedAdminTasks.ToArray()))
+            }
+        } else {
+            foreach ($AdminTask in $AdminTasks) {
+                if ($Tasks[$AdminTask]) {
+                    $null = $SelectedAdminTasks.Add($AdminTask)
+                }
+            }
+
+            if ($SelectedAdminTasks.Count -gt 0) {
+                throw 'Some selected tasks require administrator privileges: {0}' -f [String]::Join(', ', $SelectedAdminTasks.ToArray())
+            }
         }
     }
 
