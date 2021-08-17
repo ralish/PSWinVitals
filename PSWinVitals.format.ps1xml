@@ -54,11 +54,11 @@
                             </ListItem>
                             <ListItem>
                                 <Label>Service</Label>
-                                <ScriptBlock>return '{0} dump(s)' -f $_.Service.Dumps.Count</ScriptBlock>
+                                <ScriptBlock>return '{0} dump(s)' -f $_.Service.CrashDumps.Count</ScriptBlock>
                             </ListItem>
                             <ListItem>
                                 <Label>User</Label>
-                                <ScriptBlock>return '{0} dump(s)' -f $_.User.Dumps.Count</ScriptBlock>
+                                <ScriptBlock>return '{0} dump(s)' -f $_.User.CrashDumps.Count</ScriptBlock>
                             </ListItem>
                         </ListItems>
                     </ListEntry>
@@ -330,8 +330,8 @@
                                         $KernelDumps++
                                     }
 
-                                    $ServiceDumps = $_.CrashDumps.Service.Dumps.Count
-                                    $UserDumps = $_.CrashDumps.User.Dumps.Count
+                                    $ServiceDumps = $_.CrashDumps.Service.CrashDumps.Count
+                                    $UserDumps = $_.CrashDumps.User.CrashDumps.Count
 
                                     return '{0} kernel dump(s), {1} service dump(s), {2} user dump(s)' -f $KernelDumps, $ServiceDumps, $UserDumps
                                 </ScriptBlock>
