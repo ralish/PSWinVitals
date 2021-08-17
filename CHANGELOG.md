@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.6.3
+------
+
+- `Get-VitalInformation`: Fix incorrect crash dumps count in output formatting
+
 v0.6.2
 ------
 
