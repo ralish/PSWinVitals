@@ -1400,6 +1400,7 @@ Function Update-Sysinternals {
 }
 
 Function Add-NativeMethods {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
     Param()
 
