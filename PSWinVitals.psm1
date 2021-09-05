@@ -174,16 +174,21 @@ Function Get-VitalInformation {
         WindowsUpdates         = $null
     }
 
+    $TasksDone = 0
+    $TasksTotal = 0
+
     foreach ($Task in @($Tasks.Keys)) {
         if ($PSCmdlet.ParameterSetName -eq 'OptOut') {
             if ($ExcludeTasks -contains $Task) {
                 $Tasks[$Task] = $false
             } else {
                 $Tasks[$Task] = $true
+                $TasksTotal++
             }
         } else {
             if ($IncludeTasks -contains $Task) {
                 $Tasks[$Task] = $true
+                $TasksTotal++
             } else {
                 $Tasks[$Task] = $false
             }
@@ -234,52 +239,63 @@ Function Get-VitalInformation {
     }
     $VitalInformation.PSObject.TypeNames.Insert(0, 'PSWinVitals.VitalInformation')
 
+    $WriteProgressParams = @{
+        Activity = 'Retrieving vital information'
+    }
+
     if ($Tasks['ComputerInfo']) {
         if (Get-Command -Name Get-ComputerInfo -ErrorAction Ignore) {
-            Write-Host -ForegroundColor Green -Object 'Retrieving computer info ...'
+            Write-Progress @WriteProgressParams -Status 'Retrieving computer info' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.ComputerInfo = Get-ComputerInfo
         } else {
             Write-Warning -Message 'Unable to retrieve computer info as Get-ComputerInfo cmdlet not available.'
             $VitalInformation.ComputerInfo = $false
         }
+        $TasksDone++
     }
 
     if ($Tasks['HypervisorInfo']) {
-        Write-Host -ForegroundColor Green -Object 'Retrieving hypervisor info ...'
+        Write-Progress @WriteProgressParams -Status 'Retrieving hypervisor info' -PercentComplete ($TasksDone / $TasksTotal * 100)
         $VitalInformation.HypervisorInfo = Get-HypervisorInfo
+        $TasksDone++
     }
 
     if ($Tasks['DevicesWithBadStatus']) {
         if (Get-Module -Name PnpDevice -ListAvailable) {
-            Write-Host -ForegroundColor Green -Object 'Retrieving problem devices ...'
+            Write-Progress @WriteProgressParams -Status 'Retrieving problem devices' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.DevicesWithBadStatus = @(Get-PnpDevice | Where-Object { $_.Status -in ('Degraded', 'Error') })
         } else {
             Write-Warning -Message 'Unable to retrieve problem devices as PnpDevice module not available.'
             $VitalInformation.DevicesWithBadStatus = $false
         }
+        $TasksDone++
     }
 
     if ($Tasks['DevicesNotPresent']) {
         if (Get-Module -Name PnpDevice -ListAvailable) {
-            Write-Host -ForegroundColor Green -Object 'Retrieving not present devices ...'
+            Write-Progress @WriteProgressParams -Status 'Retrieving not present devices' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.DevicesNotPresent = @(Get-PnpDevice | Where-Object { $_.Status -eq 'Unknown' })
         } else {
             Write-Warning -Message 'Unable to retrieve not present devices as PnpDevice module not available.'
             $VitalInformation.DevicesNotPresent = $false
         }
+        $TasksDone++
     }
 
     if ($Tasks['StorageVolumes']) {
         if (Get-Module -Name Storage -ListAvailable) {
-            Write-Host -ForegroundColor Green -Object 'Retrieving storage volumes summary ...'
+            Write-Progress @WriteProgressParams -Status 'Retrieving storage volumes summary' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.StorageVolumes = @(Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' })
         } else {
             Write-Warning -Message 'Unable to retrieve storage volumes summary as Storage module not available.'
             $VitalInformation.StorageVolumes = $false
         }
+        $TasksDone++
     }
 
     if ($Tasks['CrashDumps']) {
+        Write-Progress @WriteProgressParams -Status 'Retrieving crash dumps' -PercentComplete ($TasksDone / $TasksTotal * 100)
+
         $CrashDumps = [PSCustomObject]@{
             Kernel  = $null
             Service = $null
@@ -287,27 +303,24 @@ Function Get-VitalInformation {
         }
         $CrashDumps.PSObject.TypeNames.Insert(0, 'PSWinVitals.CrashDumps')
 
-        Write-Host -ForegroundColor Green -Object 'Retrieving kernel crash dumps ...'
         $CrashDumps.Kernel = Get-KernelCrashDumps
-
-        Write-Host -ForegroundColor Green -Object 'Retrieving service crash dumps ...'
         $CrashDumps.Service = Get-ServiceCrashDumps
-
-        Write-Host -ForegroundColor Green -Object 'Retrieving user crash dumps ...'
         $CrashDumps.User = Get-UserCrashDumps
 
         $VitalInformation.CrashDumps = $CrashDumps
+        $TasksDone++
     }
 
     if ($Tasks['ComponentStoreAnalysis']) {
-        Write-Host -ForegroundColor Green -Object 'Running component store analysis ...'
+        Write-Progress @WriteProgressParams -Status 'Running component store analysis' -PercentComplete ($TasksDone / $TasksTotal * 100)
         $VitalInformation.ComponentStoreAnalysis = Invoke-DISM -Operation AnalyzeComponentStore
+        $TasksDone++
     }
 
     if ($Tasks['InstalledFeatures']) {
         if ((Get-WindowsProductType) -gt 1) {
             if (Get-Module -Name ServerManager -ListAvailable) {
-                Write-Host -ForegroundColor Green -Object 'Retrieving installed features ...'
+                Write-Progress @WriteProgressParams -Status 'Retrieving installed features' -PercentComplete ($TasksDone / $TasksTotal * 100)
                 $VitalInformation.InstalledFeatures = @(Get-WindowsFeature | Where-Object { $_.Installed })
             } else {
                 Write-Warning -Message 'Unable to retrieve installed features as ServerManager module not available.'
@@ -317,21 +330,24 @@ Function Get-VitalInformation {
             Write-Verbose -Message 'Unable to retrieve installed features as not running on Windows Server.'
             $VitalInformation.InstalledFeatures = $false
         }
+        $TasksDone++
     }
 
     if ($Tasks['InstalledPrograms']) {
-        Write-Host -ForegroundColor Green -Object 'Retrieving installed programs ...'
+        Write-Progress @WriteProgressParams -Status 'Retrieving installed programs' -PercentComplete ($TasksDone / $TasksTotal * 100)
         $VitalInformation.InstalledPrograms = Get-InstalledPrograms
+        $TasksDone++
     }
 
     if ($Tasks['EnvironmentVariables']) {
+        Write-Progress @WriteProgressParams -Status 'Retrieving environment variables' -PercentComplete ($TasksDone / $TasksTotal * 100)
+
         $EnvironmentVariables = [PSCustomObject]@{
             Machine = $null
             User    = $null
         }
         $EnvironmentVariables.PSObject.TypeNames.Insert(0, 'PSWinVitals.EnvironmentVariables')
 
-        Write-Host -ForegroundColor Green -Object 'Retrieving system environment variables ...'
         $Machine = [Ordered]@{ }
         $MachineVariables = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::Machine)
         foreach ($Variable in ($MachineVariables.Keys | Sort-Object)) {
@@ -339,7 +355,6 @@ Function Get-VitalInformation {
         }
         $EnvironmentVariables.Machine = $Machine
 
-        Write-Host -ForegroundColor Green -Object 'Retrieving user environment variables ...'
         $User = [Ordered]@{ }
         $UserVariables = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::User)
         foreach ($Variable in ($UserVariables.Keys | Sort-Object)) {
@@ -348,11 +363,12 @@ Function Get-VitalInformation {
         $EnvironmentVariables.User = $User
 
         $VitalInformation.EnvironmentVariables = $EnvironmentVariables
+        $TasksDone++
     }
 
     if ($Tasks['WindowsUpdates']) {
         if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
-            Write-Host -ForegroundColor Green -Object 'Retrieving Windows updates ...'
+            Write-Progress @WriteProgressParams -Status 'Retrieving Windows updates' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $WindowsUpdates = Get-WindowsUpdate @WUParameters
 
             if ($null -ne $WindowsUpdates -and $WindowsUpdates.Count -gt 0) {
@@ -364,6 +380,7 @@ Function Get-VitalInformation {
             Write-Warning -Message 'Unable to retrieve Windows updates as PSWindowsUpdate module not available.'
             $VitalInformation.WindowsUpdates = $false
         }
+        $TasksDone++
     }
 
     if ($Tasks['SysinternalsSuite']) {
@@ -374,12 +391,13 @@ Function Get-VitalInformation {
         }
 
         if (Test-Path -Path $InstallDir -PathType Container) {
+            Write-Progress @WriteProgressParams -Status 'Retrieving Sysinternals Suite version' -PercentComplete ($TasksDone / $TasksTotal * 100)
+
             $Sysinternals = [PSCustomObject]@{
                 Path    = $InstallDir
                 Version = $null
             }
 
-            Write-Host -ForegroundColor Green -Object 'Retrieving Sysinternals Suite version ...'
             $VersionFile = Join-Path -Path $InstallDir -ChildPath 'Version.txt'
             if (Test-Path -Path $VersionFile -PathType Leaf) {
                 $Sysinternals.Version = Get-Content -Path $VersionFile
@@ -393,8 +411,10 @@ Function Get-VitalInformation {
             Write-Warning -Message 'Unable to retrieve Sysinternals Suite version as it does not appear to be installed.'
             $VitalInformation.SysinternalsSuite = $false
         }
+        $TasksDone++
     }
 
+    Write-Progress @WriteProgressParams -Completed
     return $VitalInformation
 }
 
@@ -486,16 +506,21 @@ Function Invoke-VitalChecks {
         SystemFileChecker  = $null
     }
 
+    $TasksDone = 0
+    $TasksTotal = 0
+
     foreach ($Task in @($Tasks.Keys)) {
         if ($PSCmdlet.ParameterSetName -eq 'OptOut') {
             if ($ExcludeTasks -contains $Task) {
                 $Tasks[$Task] = $false
             } else {
                 $Tasks[$Task] = $true
+                $TasksTotal++
             }
         } else {
             if ($IncludeTasks -contains $Task) {
                 $Tasks[$Task] = $true
+                $TasksTotal++
             } else {
                 $Tasks[$Task] = $false
             }
@@ -509,9 +534,13 @@ Function Invoke-VitalChecks {
     }
     $VitalChecks.PSObject.TypeNames.Insert(0, 'PSWinVitals.VitalChecks')
 
+    $WriteProgressParams = @{
+        Activity = 'Running vital checks'
+    }
+
     if ($Tasks['FileSystemScans']) {
         if (Get-Module -Name Storage -ListAvailable) {
-            Write-Host -ForegroundColor Green -Object 'Running file system scans ...'
+            Write-Progress @WriteProgressParams -Status 'Running file system scans' -PercentComplete ($TasksDone / $TasksTotal * 100)
             if ($VerifyOnly) {
                 $VitalChecks.FileSystemScans = Invoke-CHKDSK -Operation Verify
             } else {
@@ -521,26 +550,30 @@ Function Invoke-VitalChecks {
             Write-Warning -Message 'Unable to run file system scans as Storage module not available.'
             $VitalChecks.FileSystemScans = $false
         }
+        $TasksDone++
     }
 
     if ($Tasks['ComponentStoreScan']) {
-        Write-Host -ForegroundColor Green -Object 'Running component store scan ...'
+        Write-Progress @WriteProgressParams -Status 'Running component store scan' -PercentComplete ($TasksDone / $TasksTotal * 100)
         if ($VerifyOnly) {
             $VitalChecks.ComponentStoreScan = Invoke-DISM -Operation ScanHealth
         } else {
             $VitalChecks.ComponentStoreScan = Invoke-DISM -Operation RestoreHealth
         }
+        $TasksDone++
     }
 
     if ($Tasks['SystemFileChecker']) {
-        Write-Host -ForegroundColor Green -Object 'Running System File Checker ...'
+        Write-Progress @WriteProgressParams -Status 'Running System File Checker' -PercentComplete ($TasksDone / $TasksTotal * 100)
         if ($VerifyOnly) {
             $VitalChecks.SystemFileChecker = Invoke-SFC -Operation Verify
         } else {
             $VitalChecks.SystemFileChecker = Invoke-SFC -Operation Scan
         }
+        $TasksDone++
     }
 
+    Write-Progress @WriteProgressParams -Completed
     return $VitalChecks
 }
 
@@ -687,16 +720,21 @@ Function Invoke-VitalMaintenance {
         WindowsUpdates             = $null
     }
 
+    $TasksDone = 0
+    $TasksTotal = 0
+
     foreach ($Task in @($Tasks.Keys)) {
         if ($PSCmdlet.ParameterSetName -eq 'OptOut') {
             if ($ExcludeTasks -contains $Task) {
                 $Tasks[$Task] = $false
             } else {
                 $Tasks[$Task] = $true
+                $TasksDone++
             }
         } else {
             if ($IncludeTasks -contains $Task) {
                 $Tasks[$Task] = $true
+                $TasksDone++
             } else {
                 $Tasks[$Task] = $false
             }
@@ -715,6 +753,10 @@ Function Invoke-VitalMaintenance {
     }
     $VitalMaintenance.PSObject.TypeNames.Insert(0, 'PSWinVitals.VitalMaintenance')
 
+    $WriteProgressParams = @{
+        Activity = 'Running vital maintenance'
+    }
+
     if ($Tasks['WindowsUpdates']) {
         try {
             Import-Module -Name PSWindowsUpdate -ErrorAction Stop
@@ -724,7 +766,7 @@ Function Invoke-VitalMaintenance {
         }
 
         if ($null -eq $VitalMaintenance.WindowsUpdates) {
-            Write-Host -ForegroundColor Green -Object 'Installing Windows updates ...'
+            Write-Progress @WriteProgressParams -Status 'Installing Windows updates' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll @WUParameters
 
             if ($null -ne $WindowsUpdates -and $WindowsUpdates.Count -gt 0) {
@@ -733,15 +775,18 @@ Function Invoke-VitalMaintenance {
                 $VitalMaintenance.WindowsUpdates = New-Object -TypeName Collections.ArrayList
             }
         }
+
+        $TasksDone++
     }
 
     if ($Tasks['ComponentStoreCleanup']) {
-        Write-Host -ForegroundColor Green -Object 'Running component store clean-up ...'
+        Write-Progress @WriteProgressParams -Status 'Running component store clean-up' -PercentComplete ($TasksDone / $TasksTotal * 100)
         $VitalMaintenance.ComponentStoreCleanup = Invoke-DISM -Operation StartComponentCleanup
+        $TasksDone++
     }
 
     if ($Tasks['PowerShellHelp']) {
-        Write-Host -ForegroundColor Green -Object 'Updating PowerShell help ...'
+        Write-Progress @WriteProgressParams -Status 'Updating PowerShell help' -PercentComplete ($TasksDone / $TasksTotal * 100)
         try {
             Update-Help -Force -ErrorAction Stop
             $VitalMaintenance.PowerShellHelp = $true
@@ -750,16 +795,18 @@ Function Invoke-VitalMaintenance {
             # Update-Help to log an error. This should really be treated as a warning.
             $VitalMaintenance.PowerShellHelp = $_.Exception.Message
         }
+        $TasksDone++
     }
 
     if ($Tasks['SysinternalsSuite']) {
-        Write-Host -ForegroundColor Green -Object 'Updating Sysinternals Suite ...'
+        Write-Progress @WriteProgressParams -Status 'Updating Sysinternals suite' -PercentComplete ($TasksDone / $TasksTotal * 100)
         $VitalMaintenance.SysinternalsSuite = Update-Sysinternals
+        $TasksDone++
     }
 
     if ($Tasks['ClearInternetExplorerCache']) {
         if (Get-Command -Name inetcpl.cpl -ErrorAction Ignore) {
-            Write-Host -ForegroundColor Green -Object 'Clearing Internet Explorer cache ...'
+            Write-Progress @WriteProgressParams -Status 'Clearing Internet Explorer cache' -PercentComplete ($TasksDone / $TasksTotal * 100)
             # More details on the bitmask here:
             # https://github.com/SeleniumHQ/selenium/blob/master/cpp/iedriver/BrowserFactory.cpp
             $RunDll32Path = Join-Path -Path $env:SystemRoot -ChildPath 'System32\rundll32.exe'
@@ -769,10 +816,12 @@ Function Invoke-VitalMaintenance {
             Write-Warning -Message 'Unable to clear Internet Explorer cache as Control Panel applet not available.'
             $VitalMaintenance.ClearInternetExplorerCache = $false
         }
+        $TasksDone++
     }
 
     if ($Tasks['DeleteErrorReports']) {
-        Write-Host -ForegroundColor Green -Object 'Deleting system error reports ...'
+        Write-Progress @WriteProgressParams -Status 'Deleting error reports' -PercentComplete ($TasksDone / $TasksTotal * 100)
+
         $SystemReports = Join-Path -Path $env:ProgramData -ChildPath 'Microsoft\Windows\WER'
         $SystemQueue = Join-Path -Path $SystemReports -ChildPath 'ReportQueue'
         $SystemArchive = Join-Path -Path $SystemReports -ChildPath 'ReportArchive'
@@ -782,7 +831,6 @@ Function Invoke-VitalMaintenance {
             }
         }
 
-        Write-Host -ForegroundColor Green -Object ('Deleting {0} error reports ...' -f $env:USERNAME)
         $UserReports = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\WER'
         $UserQueue = Join-Path -Path $UserReports -ChildPath 'ReportQueue'
         $UserArchive = Join-Path -Path $UserReports -ChildPath 'ReportArchive'
@@ -793,22 +841,23 @@ Function Invoke-VitalMaintenance {
         }
 
         $VitalMaintenance.DeleteErrorReports = $true
+        $TasksDone++
     }
 
     if ($Tasks['DeleteTemporaryFiles']) {
-        Write-Host -ForegroundColor Green -Object 'Deleting system temporary files ...'
+        Write-Progress @WriteProgressParams -Status 'Deleting temporary files' -PercentComplete ($TasksDone / $TasksTotal * 100)
+
         $SystemTemp = [Environment]::GetEnvironmentVariable('Temp', [EnvironmentVariableTarget]::Machine)
         Remove-Item -Path "$SystemTemp\*" -Recurse -ErrorAction Ignore
-
-        Write-Host -ForegroundColor Green -Object ('Deleting {0} temporary files ...' -f $env:USERNAME)
         Remove-Item -Path "$env:TEMP\*" -Recurse -ErrorAction Ignore
 
         $VitalMaintenance.DeleteTemporaryFiles = $true
+        $TasksDone++
     }
 
     if ($Tasks['EmptyRecycleBin']) {
         if (Get-Command -Name Clear-RecycleBin -ErrorAction Ignore) {
-            Write-Host -ForegroundColor Green -Object 'Emptying Recycle Bin ...'
+            Write-Progress @WriteProgressParams -Status 'Emptying Recycle Bin' -PercentComplete ($TasksDone / $TasksTotal * 100)
             try {
                 Clear-RecycleBin -Force -ErrorAction Stop
                 $VitalMaintenance.EmptyRecycleBin = $true
@@ -826,8 +875,10 @@ Function Invoke-VitalMaintenance {
             Write-Warning -Message 'Unable to empty Recycle Bin as Clear-RecycleBin cmdlet not available.'
             $VitalMaintenance.EmptyRecycleBin = $false
         }
+        $TasksDone++
     }
 
+    Write-Progress @WriteProgressParams -Completed
     return $VitalMaintenance
 }
 
