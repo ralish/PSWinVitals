@@ -729,12 +729,12 @@ Function Invoke-VitalMaintenance {
                 $Tasks[$Task] = $false
             } else {
                 $Tasks[$Task] = $true
-                $TasksDone++
+                $TasksTotal++
             }
         } else {
             if ($IncludeTasks -contains $Task) {
                 $Tasks[$Task] = $true
-                $TasksDone++
+                $TasksTotal++
             } else {
                 $Tasks[$Task] = $false
             }
