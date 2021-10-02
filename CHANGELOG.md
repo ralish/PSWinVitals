@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.6.5
+------
+
+- `Invoke-VitalMaintenance`: Fix divide by zero error due to progress bar handling bug
+
 v0.6.4
 ------
 
