@@ -156,7 +156,7 @@ Function Get-VitalInformation {
         [String[]]$IncludeTasks,
 
         [ValidateNotNull()]
-        [Hashtable]$WUParameters = @{ }
+        [Hashtable]$WUParameters = @{}
     )
 
     $Tasks = @{
@@ -348,14 +348,14 @@ Function Get-VitalInformation {
         }
         $EnvironmentVariables.PSObject.TypeNames.Insert(0, 'PSWinVitals.EnvironmentVariables')
 
-        $Machine = [Ordered]@{ }
+        $Machine = [Ordered]@{}
         $MachineVariables = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::Machine)
         foreach ($Variable in ($MachineVariables.Keys | Sort-Object)) {
             $Machine[$Variable] = $MachineVariables[$Variable]
         }
         $EnvironmentVariables.Machine = $Machine
 
-        $User = [Ordered]@{ }
+        $User = [Ordered]@{}
         $UserVariables = [Environment]::GetEnvironmentVariables([EnvironmentVariableTarget]::User)
         foreach ($Variable in ($UserVariables.Keys | Sort-Object)) {
             $User[$Variable] = $UserVariables[$Variable]
@@ -702,7 +702,7 @@ Function Invoke-VitalMaintenance {
         [String[]]$IncludeTasks,
 
         [ValidateNotNull()]
-        [Hashtable]$WUParameters = @{ }
+        [Hashtable]$WUParameters = @{}
     )
 
     if (!(Test-IsAdministrator)) {
@@ -1478,7 +1478,7 @@ public static extern int RegQueryInfoKey(Microsoft.Win32.SafeHandles.SafeRegistr
                                          out UInt64 lpftLastWriteTime);
 '@
 
-        $AddTypeParams = @{ }
+        $AddTypeParams = @{}
 
         if ($PSVersionTable['PSEdition'] -eq 'Core') {
             $AddTypeParams['ReferencedAssemblies'] = 'Microsoft.Win32.Registry'
