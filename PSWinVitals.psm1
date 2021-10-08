@@ -263,7 +263,7 @@ Function Get-VitalInformation {
     if ($Tasks['DevicesWithBadStatus']) {
         if (Get-Module -Name PnpDevice -ListAvailable) {
             Write-Progress @WriteProgressParams -Status 'Retrieving problem devices' -PercentComplete ($TasksDone / $TasksTotal * 100)
-            $VitalInformation.DevicesWithBadStatus = @(Get-PnpDevice | Where-Object { $_.Status -in ('Degraded', 'Error') })
+            $VitalInformation.DevicesWithBadStatus = @(Get-PnpDevice | Where-Object Status -In 'Degraded', 'Error')
         } else {
             Write-Warning -Message 'Unable to retrieve problem devices as PnpDevice module not available.'
             $VitalInformation.DevicesWithBadStatus = $false
@@ -274,7 +274,7 @@ Function Get-VitalInformation {
     if ($Tasks['DevicesNotPresent']) {
         if (Get-Module -Name PnpDevice -ListAvailable) {
             Write-Progress @WriteProgressParams -Status 'Retrieving not present devices' -PercentComplete ($TasksDone / $TasksTotal * 100)
-            $VitalInformation.DevicesNotPresent = @(Get-PnpDevice | Where-Object { $_.Status -eq 'Unknown' })
+            $VitalInformation.DevicesNotPresent = @(Get-PnpDevice | Where-Object Status -EQ 'Unknown')
         } else {
             Write-Warning -Message 'Unable to retrieve not present devices as PnpDevice module not available.'
             $VitalInformation.DevicesNotPresent = $false
@@ -285,7 +285,7 @@ Function Get-VitalInformation {
     if ($Tasks['StorageVolumes']) {
         if (Get-Module -Name Storage -ListAvailable) {
             Write-Progress @WriteProgressParams -Status 'Retrieving storage volumes summary' -PercentComplete ($TasksDone / $TasksTotal * 100)
-            $VitalInformation.StorageVolumes = @(Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' })
+            $VitalInformation.StorageVolumes = @(Get-Volume | Where-Object DriveType -EQ 'Fixed')
         } else {
             Write-Warning -Message 'Unable to retrieve storage volumes summary as Storage module not available.'
             $VitalInformation.StorageVolumes = $false
@@ -321,7 +321,7 @@ Function Get-VitalInformation {
         if ((Get-WindowsProductType) -gt 1) {
             if (Get-Module -Name ServerManager -ListAvailable) {
                 Write-Progress @WriteProgressParams -Status 'Retrieving installed features' -PercentComplete ($TasksDone / $TasksTotal * 100)
-                $VitalInformation.InstalledFeatures = @(Get-WindowsFeature | Where-Object { $_.Installed })
+                $VitalInformation.InstalledFeatures = @(Get-WindowsFeature | Where-Object Installed)
             } else {
                 Write-Warning -Message 'Unable to retrieve installed features as ServerManager module not available.'
                 $VitalInformation.InstalledFeatures = $false
