@@ -791,8 +791,9 @@ Function Invoke-VitalMaintenance {
             Update-Help -Force -ErrorAction Stop
             $VitalMaintenance.PowerShellHelp = $true
         } catch {
-            # Many modules don't define the HelpInfoUri key in their manifest, which will cause
-            # Update-Help to log an error. This should really be treated as a warning.
+            # Many modules don't define the HelpInfoUri key in their manifest,
+            # which will cause Update-Help to log an error. This should really
+            # be treated as a warning.
             $VitalMaintenance.PowerShellHelp = $_.Exception.Message
         }
         $TasksDone++
@@ -862,9 +863,10 @@ Function Invoke-VitalMaintenance {
                 Clear-RecycleBin -Force -ErrorAction Stop
                 $VitalMaintenance.EmptyRecycleBin = $true
             } catch [ComponentModel.Win32Exception] {
-                # Sometimes clearing the Recycle Bin fails with an exception indicating the Recycle
-                # Bin directory doesn't exist. Only a generic E_FAIL exception is thrown though, so
-                # inspect the actual exception message to be sure.
+                # Sometimes clearing the Recycle Bin fails with an exception
+                # indicating the Recycle Bin directory doesn't exist. Only a
+                # generic E_FAIL exception is thrown though, so inspect the
+                # actual exception message to be sure.
                 if ($_.Exception.Message -eq 'The system cannot find the path specified') {
                     $VitalMaintenance.EmptyRecycleBin = $true
                 } else {
@@ -1182,16 +1184,18 @@ Function Invoke-CHKDSK {
         [String]$Operation = 'Scan'
     )
 
-    # We could use the Repair-Volume cmdlet introduced in Windows 8/Server 2012, but it's just a
-    # thin wrapper around CHKDSK and only exposes a small subset of its underlying functionality.
+    # We could use the Repair-Volume cmdlet introduced in Windows 8 and Server
+    # 2012, but it's just a thin wrapper around CHKDSK and only exposes a small
+    # subset of its underlying functionality.
     $LogPrefix = 'CHKDSK'
 
     # Supported file systems for scanning for errors (Verify)
     $SupportedFileSystems = @('exFAT', 'FAT', 'FAT16', 'FAT32', 'NTFS', 'NTFS4', 'NTFS5')
     # Supported file system for scanning for errors and fixing (Scan)
     #
-    # FAT volumes don't support online repair so fixing errors means dismounting the volume. No
-    # parameter equivalent to "dismount only if safe" exists so for now there's no support.
+    # FAT volumes don't support online repair so fixing errors means
+    # dismounting the volume. No parameter equivalent to "dismount only if
+    # safe" exists so for now we don't support reparing these volumes.
     $ScanSupportedFileSystems = @('NTFS', 'NTFS4', 'NTFS5')
 
     $Volumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.FileSystem -in $SupportedFileSystems }
@@ -1248,8 +1252,9 @@ Function Invoke-DISM {
         [String]$Operation
     )
 
-    # The Dism module doesn't include cmdlets which map to the /Cleanup-Image functionality in the
-    # underlying Dism.exe utility, so for now it's necessary to invoke it directly.
+    # The Dism module doesn't include cmdlets which map to the /Cleanup-Image
+    # functionality in the underlying Dism.exe utility, so it's necessary to
+    # invoke it directly.
     $LogPrefix = 'DISM'
     $DISM = [PSCustomObject]@{
         Operation = $Operation
@@ -1282,33 +1287,39 @@ Function Invoke-SFC {
     <#
         SFC is a horror show when it comes to capturing its output:
 
-        1. In contrast to most (every?) other built-in Windows console application, SFC output is
-           UTF-16LE. PowerShell is probably expecting windows-1252 (a superset of ASCII) and so the
-           output will be decoded incorrectly. Fix this by temporarily setting the OutputEncoding
-           property of the Console static class to Unicode, which specifies the character encoding
-           used by native applications.
+        1. In contrast to most (every?) other built-in Windows console app, SFC
+           output is UTF-16LE. PowerShell is probably expecting windows-1252 (a
+           superset of ASCII), so the output will be decoded incorrectly. Fix
+           this by temporarily setting the OutputEncoding property of the
+           Console static class to Unicode, which specifies the character
+           encoding used by native applications.
 
-        2. It outputs \r\r\n sequences for newlines (yes, really). PowerShell interprets this
-           character sequence as two newlines so the output must be filtered to remove the extras.
+        2. It outputs \r\r\n sequences for newlines (yes, really). PowerShell
+           interprets this character sequence as two newlines so the output
+           must be filtered to remove the extras.
 
-        3. When running in a remote session via WinRM we're not running under a console, which will
-           result in the attempt to set [Console]::OutputEncoding throwing an exception due to an
-           invalid handle. Actually, that's not entirely true; it will work when setting it to the
-           [Text.Encoding]::Unicode enumeration (i.e. UTF-16LE), which is what we want, but will
-           throw an exception on changing it back to anything else (including the original value).
-           The result is broken output for any subsequent native app that's called (except SFC).
+        3. When running in a remote session via WinRM we're not running under a
+           console, which results in an invalid handle exception on setting
+           [Console]::OutputEncoding. Actually, that's not entirely true; it
+           works when setting it to [Text.Encoding]::Unicode (i.e. UTF-16LE),
+           which is what we want, but will throw an exception on changing it
+           back to anything else (including the original value). This causes
+           broken output for any subsequent app that's called (except SFC).
 
-           The solution to this craziness is to manually allocate a console with AllocConsole() and
-           free it with FreeConsole(). This will spawn a ConsoleHost.exe process allowing us to set
-           [Console]::OutputEncoding without hitting an invalid handle exception. SFC will spawn a
-           Console Host itself anyway if it doesn't inherit a console from the parent process, so
-           this happens regardless; we're just attaching a console to PowerShell directly instead.
+           The solution to this craziness is to manually allocate a console
+           with AllocConsole() and free it with FreeConsole(). This spawns a
+           ConsoleHost.exe process allowing us to set [Console]::OutputEncoding
+           without hitting an invalid handle exception. SFC spawns a Console
+           Host itself anyway if it doesn't inherit a console from the parent
+           process, so this happens regardless; we're just attaching a console
+           to PowerShell directly instead.
 
-        Bonus extra confusion: you'll probably find SFC works just fine if you invoke it directly in
-        PowerShell. That's because the problem only happens when *redirecting* the output. It seems
-        that if SFC output is not being redirected it just directly writes to the console by calling
-        WriteConsole(). Except under WinRM, in which case it's always broken, presumably because its
-        output is always being redirected at some level being under a remote session.
+        Bonus extra confusion: you'll probably find SFC works just fine if you
+        invoke it directly in PowerShell. That's because the problem happens
+        when *redirecting* the output. It seems that if SFC output is not being
+        redirected it just directly writes to the console via WriteConsole().
+        Except under WinRM, where it's always broken, presumably because its
+        output is being redirected at some level being under a remote session.
 
         Useful references:
         - https://stackoverflow.com/a/57751203/8787985
@@ -1344,7 +1355,7 @@ Function Invoke-SFC {
     } else {
         $SfcParam = '/VERIFYONLY'
     }
-    # Remove the duplicate newlines and then split on them so the output is a string array
+    # Remove the duplicate newlines and split on them for a string array output
     $SFC.Output = ((& $SfcPath $SfcParam) -join "`r`n" -replace "`r`n`r`n", "`r`n") -split "`r`n"
     $SFC.ExitCode = $LASTEXITCODE
 
@@ -1419,9 +1430,10 @@ Function Update-Sysinternals {
     if (!$ExistingVersion -or ($DownloadedVersion -gt $ExistingVersion)) {
         Write-Verbose -Message ('[{0}] Extracting archive to: {1}' -f $LogPrefix, $InstallDir)
         Remove-Item -Path $InstallDir -Recurse -ErrorAction Ignore
-        # The -Force parameter shouldn't be necessary given we've removed any existing files,
-        # except sometimes the archive has files differing only by case. Permit overwriting of
-        # files as a workaround and we just have to hope any overwritten files were older.
+        # The -Force parameter shouldn't be necessary given we've removed any
+        # existing files, except sometimes the archive has files differing only
+        # by case. Permit overwriting of files as a workaround and we just have
+        # to hope any overwritten files were older.
         Expand-ZipFile -FilePath $DownloadPath -DestinationPath $InstallDir -Force
         Set-Content -Path $VersionFile -Value $DownloadedVersion
         Remove-Item -Path $DownloadPath
