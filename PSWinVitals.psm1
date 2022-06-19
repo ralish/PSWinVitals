@@ -197,7 +197,7 @@ Function Get-VitalInformation {
 
     if (!(Test-IsAdministrator)) {
         $AdminTasks = 'ComponentStoreAnalysis', 'CrashDumps', 'WindowsUpdates'
-        $SelectedAdminTasks = New-Object -TypeName Collections.ArrayList
+        $SelectedAdminTasks = New-Object -TypeName 'Collections.ArrayList'
 
         if ($PSCmdlet.ParameterSetName -eq 'OptOut') {
             foreach ($AdminTask in $AdminTasks) {
@@ -244,7 +244,7 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['ComputerInfo']) {
-        if (Get-Command -Name Get-ComputerInfo -ErrorAction Ignore) {
+        if (Get-Command -Name 'Get-ComputerInfo' -ErrorAction Ignore) {
             Write-Progress @WriteProgressParams -Status 'Retrieving computer info' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.ComputerInfo = Get-ComputerInfo
         } else {
@@ -261,7 +261,7 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['DevicesWithBadStatus']) {
-        if (Get-Module -Name PnpDevice -ListAvailable -Verbose:$false) {
+        if (Get-Module -Name 'PnpDevice' -ListAvailable -Verbose:$false) {
             Write-Progress @WriteProgressParams -Status 'Retrieving problem devices' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.DevicesWithBadStatus = @(Get-PnpDevice | Where-Object Status -In 'Degraded', 'Error')
         } else {
@@ -272,7 +272,7 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['DevicesNotPresent']) {
-        if (Get-Module -Name PnpDevice -ListAvailable -Verbose:$false) {
+        if (Get-Module -Name 'PnpDevice' -ListAvailable -Verbose:$false) {
             Write-Progress @WriteProgressParams -Status 'Retrieving not present devices' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.DevicesNotPresent = @(Get-PnpDevice | Where-Object Status -EQ 'Unknown')
         } else {
@@ -283,7 +283,7 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['StorageVolumes']) {
-        if (Get-Module -Name Storage -ListAvailable -Verbose:$false) {
+        if (Get-Module -Name 'Storage' -ListAvailable -Verbose:$false) {
             Write-Progress @WriteProgressParams -Status 'Retrieving storage volumes summary' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.StorageVolumes = @(Get-Volume | Where-Object DriveType -EQ 'Fixed')
         } else {
@@ -319,7 +319,7 @@ Function Get-VitalInformation {
 
     if ($Tasks['InstalledFeatures']) {
         if ((Get-WindowsProductType) -gt 1) {
-            if (Get-Module -Name ServerManager -ListAvailable -Verbose:$false) {
+            if (Get-Module -Name 'ServerManager' -ListAvailable -Verbose:$false) {
                 Write-Progress @WriteProgressParams -Status 'Retrieving installed features' -PercentComplete ($TasksDone / $TasksTotal * 100)
                 $VitalInformation.InstalledFeatures = @(Get-WindowsFeature | Where-Object Installed)
             } else {
@@ -367,14 +367,14 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['WindowsUpdates']) {
-        if (Get-Module -Name PSWindowsUpdate -ListAvailable -Verbose:$false) {
+        if (Get-Module -Name 'PSWindowsUpdate' -ListAvailable -Verbose:$false) {
             Write-Progress @WriteProgressParams -Status 'Retrieving Windows updates' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $WindowsUpdates = Get-WindowsUpdate @WUParameters
 
             if ($null -ne $WindowsUpdates -and $WindowsUpdates.Count -gt 0) {
-                $VitalInformation.WindowsUpdates = New-Object -TypeName Collections.ArrayList -ArgumentList @(, $WindowsUpdates)
+                $VitalInformation.WindowsUpdates = New-Object -TypeName 'Collections.ArrayList' -ArgumentList @(, $WindowsUpdates)
             } else {
-                $VitalInformation.WindowsUpdates = New-Object -TypeName Collections.ArrayList
+                $VitalInformation.WindowsUpdates = New-Object -TypeName 'Collections.ArrayList'
             }
         } else {
             Write-Warning -Message 'Unable to retrieve Windows updates as PSWindowsUpdate module not available.'
@@ -539,7 +539,7 @@ Function Invoke-VitalChecks {
     }
 
     if ($Tasks['FileSystemScans']) {
-        if (Get-Module -Name Storage -ListAvailable -Verbose:$false) {
+        if (Get-Module -Name 'Storage' -ListAvailable -Verbose:$false) {
             Write-Progress @WriteProgressParams -Status 'Running file system scans' -PercentComplete ($TasksDone / $TasksTotal * 100)
             if ($VerifyOnly) {
                 $VitalChecks.FileSystemScans = Invoke-CHKDSK -Operation Verify
@@ -759,7 +759,7 @@ Function Invoke-VitalMaintenance {
 
     if ($Tasks['WindowsUpdates']) {
         try {
-            Import-Module -Name PSWindowsUpdate -ErrorAction Stop -Verbose:$false
+            Import-Module -Name 'PSWindowsUpdate' -ErrorAction Stop -Verbose:$false
         } catch [IO.FileNotFoundException] {
             Write-Warning -Message 'Unable to install Windows updates as PSWindowsUpdate module not available.'
             $VitalMaintenance.WindowsUpdates = $false
@@ -770,9 +770,9 @@ Function Invoke-VitalMaintenance {
             $WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll @WUParameters
 
             if ($null -ne $WindowsUpdates -and $WindowsUpdates.Count -gt 0) {
-                $VitalMaintenance.WindowsUpdates = New-Object -TypeName Collections.ArrayList -ArgumentList @(, $WindowsUpdates)
+                $VitalMaintenance.WindowsUpdates = New-Object -TypeName 'Collections.ArrayList' -ArgumentList @(, $WindowsUpdates)
             } else {
-                $VitalMaintenance.WindowsUpdates = New-Object -TypeName Collections.ArrayList
+                $VitalMaintenance.WindowsUpdates = New-Object -TypeName 'Collections.ArrayList'
             }
         }
 
@@ -806,7 +806,7 @@ Function Invoke-VitalMaintenance {
     }
 
     if ($Tasks['ClearInternetExplorerCache']) {
-        if (Get-Command -Name inetcpl.cpl -ErrorAction Ignore) {
+        if (Get-Command -Name 'inetcpl.cpl' -ErrorAction Ignore) {
             Write-Progress @WriteProgressParams -Status 'Clearing Internet Explorer cache' -PercentComplete ($TasksDone / $TasksTotal * 100)
             # More details on the bitmask here:
             # https://github.com/SeleniumHQ/selenium/blob/master/cpp/iedriver/BrowserFactory.cpp
@@ -857,7 +857,7 @@ Function Invoke-VitalMaintenance {
     }
 
     if ($Tasks['EmptyRecycleBin']) {
-        if (Get-Command -Name Clear-RecycleBin -ErrorAction Ignore) {
+        if (Get-Command -Name 'Clear-RecycleBin' -ErrorAction Ignore) {
             Write-Progress @WriteProgressParams -Status 'Emptying Recycle Bin' -PercentComplete ($TasksDone / $TasksTotal * 100)
             try {
                 Clear-RecycleBin -Force -ErrorAction Stop
@@ -895,7 +895,7 @@ Function Get-HypervisorInfo {
         ToolsVersion = $null
     }
 
-    $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -Verbose:$false
+    $ComputerSystem = Get-CimInstance -ClassName 'Win32_ComputerSystem' -Verbose:$false
     $Manufacturer = $ComputerSystem.Manufacturer
     $Model = $ComputerSystem.Model
 
@@ -945,7 +945,7 @@ Function Get-InstalledPrograms {
 
     Add-NativeMethods
 
-    $InstalledPrograms = New-Object -TypeName Collections.ArrayList
+    $InstalledPrograms = New-Object -TypeName 'Collections.ArrayList'
 
     # Programs installed system-wide in native bitness
     $ComputerNativeRegPath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
@@ -1008,7 +1008,7 @@ Function Get-InstalledPrograms {
             $RegInstallDate = $Program.InstallDate
             if ($RegInstallDate -match '^[0-9]{8}') {
                 try {
-                    $InstalledProgram.InstallDate = New-Object -TypeName DateTime -ArgumentList $RegInstallDate.Substring(0, 4), $RegInstallDate.Substring(4, 2), $RegInstallDate.Substring(6, 2)
+                    $InstalledProgram.InstallDate = New-Object -TypeName 'DateTime' -ArgumentList $RegInstallDate.Substring(0, 4), $RegInstallDate.Substring(4, 2), $RegInstallDate.Substring(6, 2)
                 } catch { }
             }
 
@@ -1102,7 +1102,7 @@ Function Get-ServiceCrashDumps {
     Param()
 
     $LogPrefix = 'ServiceCrashDumps'
-    $ServiceCrashDumps = New-Object -TypeName Collections.ArrayList
+    $ServiceCrashDumps = New-Object -TypeName 'Collections.ArrayList'
 
     $null = $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-18' -Name 'LocalSystem' -LogPrefix $LogPrefix))
     $null = $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-19' -Name 'LocalService' -LogPrefix $LogPrefix))
@@ -1117,7 +1117,7 @@ Function Get-UserCrashDumps {
     Param()
 
     $LogPrefix = 'UserCrashDumps'
-    $UserCrashDumps = New-Object -TypeName Collections.ArrayList
+    $UserCrashDumps = New-Object -TypeName 'Collections.ArrayList'
 
     $ProfileList = Get-Item -Path 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\ProfileList'
     $UserSids = $ProfileList.GetSubKeyNames() | Where-Object { $_ -match '^S-1-5-21-' }
@@ -1200,7 +1200,7 @@ Function Invoke-CHKDSK {
 
     $Volumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.FileSystem -in $SupportedFileSystems }
 
-    $Results = New-Object -TypeName Collections.ArrayList
+    $Results = New-Object -TypeName 'Collections.ArrayList'
     foreach ($Volume in $Volumes) {
         $VolumePath = $Volume.Path.TrimEnd('\')
 
@@ -1413,7 +1413,7 @@ Function Update-Sysinternals {
 
     Write-Verbose -Message ('[{0}] Downloading latest version from: {1}' -f $LogPrefix, $DownloadUrl)
     $null = New-Item -Path $DownloadDir -ItemType Directory -ErrorAction Ignore
-    $WebClient = New-Object -TypeName Net.WebClient
+    $WebClient = New-Object -TypeName 'Net.WebClient'
     try {
         $WebClient.DownloadFile($DownloadUrl, $DownloadPath)
     } catch {
@@ -1422,7 +1422,7 @@ Function Update-Sysinternals {
     }
 
     Write-Verbose -Message ('[{0}] Determining downloaded version ...' -f $LogPrefix)
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    Add-Type -AssemblyName 'System.IO.Compression.FileSystem'
     $Archive = [IO.Compression.ZipFile]::OpenRead($DownloadPath)
     $DownloadedVersion = ($Archive.Entries.LastWriteTime | Sort-Object | Select-Object -Last 1).ToString('yyyyMMdd')
     $Archive.Dispose()
@@ -1496,7 +1496,7 @@ public static extern int RegQueryInfoKey(Microsoft.Win32.SafeHandles.SafeRegistr
             $AddTypeParams['ReferencedAssemblies'] = 'Microsoft.Win32.Registry'
         }
 
-        Add-Type -Namespace PSWinVitals -Name NativeMethods -MemberDefinition $NativeMethods @AddTypeParams
+        Add-Type -Namespace 'PSWinVitals' -Name 'NativeMethods' -MemberDefinition $NativeMethods @AddTypeParams
     }
 }
 
@@ -1516,7 +1516,7 @@ Function Expand-ZipFile {
     if ($PSVersionTable.PSVersion.Major -ge 5) {
         Expand-Archive -Path $FilePath -DestinationPath $DestinationPath -Force:$Force
     } else {
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        Add-Type -AssemblyName 'System.IO.Compression.FileSystem'
         [IO.Compression.ZipFile]::ExtractToDirectory($FilePath, $DestinationPath, $Force)
     }
 }
@@ -1525,7 +1525,7 @@ Function Get-WindowsProductType {
     [CmdletBinding()]
     Param()
 
-    return (Get-CimInstance -ClassName Win32_OperatingSystem -Verbose:$false).ProductType
+    return (Get-CimInstance -ClassName 'Win32_OperatingSystem' -Verbose:$false).ProductType
 }
 
 Function Test-IsAdministrator {
@@ -1536,6 +1536,7 @@ Function Test-IsAdministrator {
     if ($User.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         return $true
     }
+
     return $false
 }
 
@@ -1543,8 +1544,9 @@ Function Test-IsWindows64bit {
     [CmdletBinding()]
     Param()
 
-    if ((Get-CimInstance -ClassName Win32_OperatingSystem -Verbose:$false).OSArchitecture -eq '64-bit') {
+    if ((Get-CimInstance -ClassName 'Win32_OperatingSystem' -Verbose:$false).OSArchitecture -eq '64-bit') {
         return $true
     }
+
     return $false
 }
