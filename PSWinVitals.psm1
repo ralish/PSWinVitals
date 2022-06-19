@@ -945,9 +945,9 @@ Function Get-InstalledPrograms {
 
     Add-NativeMethods
 
-    # Programs installed system-wide in native bitness
+    # System-wide in native bitness
     $ComputerNativeRegPath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
-    # Programs installed system-wide under the 32-bit emulation layer (64-bit Windows only)
+    # System-wide under the 32-bit emulation layer (64-bit Windows only)
     $ComputerWow64RegPath = 'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
 
     # Retrieve all installed programs from available keys
