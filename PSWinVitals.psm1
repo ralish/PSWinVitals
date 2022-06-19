@@ -120,6 +120,7 @@ Function Get-VitalInformation {
     #>
 
     [CmdletBinding(DefaultParameterSetName = 'OptOut')]
+    [OutputType([PSCustomObject])]
     Param(
         [Parameter(ParameterSetName = 'OptOut')]
         [ValidateSet(
@@ -476,6 +477,7 @@ Function Invoke-VitalChecks {
 
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding(DefaultParameterSetName = 'OptOut')]
+    [OutputType([PSCustomObject])]
     Param(
         [Parameter(ParameterSetName = 'OptOut')]
         [ValidateSet(
@@ -674,6 +676,7 @@ Function Invoke-VitalMaintenance {
     #>
 
     [CmdletBinding(DefaultParameterSetName = 'OptOut')]
+    [OutputType([PSCustomObject])]
     Param(
         [Parameter(ParameterSetName = 'OptOut')]
         [ValidateSet(
@@ -886,6 +889,7 @@ Function Invoke-VitalMaintenance {
 
 Function Get-HypervisorInfo {
     [CmdletBinding()]
+    [OutputType([Boolean], [PSCustomObject])]
     Param()
 
     $LogPrefix = 'HypervisorInfo'
@@ -941,6 +945,7 @@ Function Get-InstalledPrograms {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingEmptyCatchBlock', '')]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
+    [OutputType([Object[]])]
     Param()
 
     Add-NativeMethods
@@ -1053,6 +1058,7 @@ Function Get-InstalledPrograms {
 Function Get-KernelCrashDumps {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     Param()
 
     $LogPrefix = 'KernelCrashDumps'
@@ -1098,6 +1104,7 @@ Function Get-KernelCrashDumps {
 Function Get-ServiceCrashDumps {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
+    [OutputType([Object[]])]
     Param()
 
     $LogPrefix = 'ServiceCrashDumps'
@@ -1113,6 +1120,7 @@ Function Get-ServiceCrashDumps {
 Function Get-UserCrashDumps {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
+    [OutputType([Object[]])]
     Param()
 
     $LogPrefix = 'UserCrashDumps'
@@ -1130,6 +1138,7 @@ Function Get-UserCrashDumps {
 Function Get-UserProfileCrashDumps {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
+    [OutputType([Void], [PSCustomObject])]
     Param(
         [Parameter(Mandatory)]
         [String]$Sid,
@@ -1178,6 +1187,7 @@ Function Get-UserProfileCrashDumps {
 
 Function Invoke-CHKDSK {
     [CmdletBinding()]
+    [OutputType([Object[]])]
     Param(
         [ValidateSet('Scan', 'Verify')]
         [String]$Operation = 'Scan'
@@ -1245,6 +1255,7 @@ Function Invoke-CHKDSK {
 
 Function Invoke-DISM {
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     Param(
         [Parameter(Mandatory)]
         [ValidateSet('AnalyzeComponentStore', 'RestoreHealth', 'ScanHealth', 'StartComponentCleanup')]
@@ -1278,6 +1289,7 @@ Function Invoke-DISM {
 
 Function Invoke-SFC {
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     Param(
         [ValidateSet('Scan', 'Verify')]
         [String]$Operation = 'Scan'
@@ -1381,6 +1393,7 @@ Function Update-Sysinternals {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
+    [OutputType([String])]
     Param(
         [ValidatePattern('^http[Ss]?://.*')]
         [String]$DownloadUrl = 'https://download.sysinternals.com/files/SysinternalsSuite.zip'
@@ -1464,6 +1477,7 @@ Function Update-Sysinternals {
 Function Add-NativeMethods {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     [CmdletBinding()]
+    [OutputType([Void])]
     Param()
 
     if (!('PSWinVitals.NativeMethods' -as [Type])) {
@@ -1501,6 +1515,7 @@ public static extern int RegQueryInfoKey(Microsoft.Win32.SafeHandles.SafeRegistr
 
 Function Expand-ZipFile {
     [CmdletBinding()]
+    [OutputType([Void])]
     Param(
         [Parameter(Mandatory)]
         [String]$FilePath,
@@ -1522,6 +1537,7 @@ Function Expand-ZipFile {
 
 Function Get-WindowsProductType {
     [CmdletBinding()]
+    [OutputType([UInt])]
     Param()
 
     return (Get-CimInstance -ClassName 'Win32_OperatingSystem' -Verbose:$false).ProductType
@@ -1529,6 +1545,7 @@ Function Get-WindowsProductType {
 
 Function Test-IsAdministrator {
     [CmdletBinding()]
+    [OutputType([Boolean])]
     Param()
 
     $User = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
@@ -1541,6 +1558,7 @@ Function Test-IsAdministrator {
 
 Function Test-IsWindows64bit {
     [CmdletBinding()]
+    [OutputType([Boolean])]
     Param()
 
     if ((Get-CimInstance -ClassName 'Win32_OperatingSystem' -Verbose:$false).OSArchitecture -eq '64-bit') {
