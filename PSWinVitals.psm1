@@ -1024,7 +1024,7 @@ Function Get-InstalledPrograms {
         # Fall back to the last write time of the registry key
         if (!$InstalledProgram.InstallDate) {
             [UInt64]$RegLastWriteTime = 0
-            $Status = [PSWinVitals.NativeMethods]::RegQueryInfoKey($UninstallKey.Handle, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [ref]$RegLastWriteTime)
+            $Status = [PSWinVitals.NativeMethods]::RegQueryInfoKey($UninstallKey.Handle, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [IntPtr]::Zero, [Ref]$RegLastWriteTime)
 
             if ($Status -eq 0) {
                 $InstalledProgram.InstallDate = [DateTime]::FromFileTime($RegLastWriteTime)
