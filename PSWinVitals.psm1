@@ -261,7 +261,7 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['DevicesWithBadStatus']) {
-        if (Get-Module -Name PnpDevice -ListAvailable) {
+        if (Get-Module -Name PnpDevice -ListAvailable -Verbose:$false) {
             Write-Progress @WriteProgressParams -Status 'Retrieving problem devices' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.DevicesWithBadStatus = @(Get-PnpDevice | Where-Object Status -In 'Degraded', 'Error')
         } else {
@@ -272,7 +272,7 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['DevicesNotPresent']) {
-        if (Get-Module -Name PnpDevice -ListAvailable) {
+        if (Get-Module -Name PnpDevice -ListAvailable -Verbose:$false) {
             Write-Progress @WriteProgressParams -Status 'Retrieving not present devices' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.DevicesNotPresent = @(Get-PnpDevice | Where-Object Status -EQ 'Unknown')
         } else {
@@ -283,7 +283,7 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['StorageVolumes']) {
-        if (Get-Module -Name Storage -ListAvailable) {
+        if (Get-Module -Name Storage -ListAvailable -Verbose:$false) {
             Write-Progress @WriteProgressParams -Status 'Retrieving storage volumes summary' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $VitalInformation.StorageVolumes = @(Get-Volume | Where-Object DriveType -EQ 'Fixed')
         } else {
@@ -319,7 +319,7 @@ Function Get-VitalInformation {
 
     if ($Tasks['InstalledFeatures']) {
         if ((Get-WindowsProductType) -gt 1) {
-            if (Get-Module -Name ServerManager -ListAvailable) {
+            if (Get-Module -Name ServerManager -ListAvailable -Verbose:$false) {
                 Write-Progress @WriteProgressParams -Status 'Retrieving installed features' -PercentComplete ($TasksDone / $TasksTotal * 100)
                 $VitalInformation.InstalledFeatures = @(Get-WindowsFeature | Where-Object Installed)
             } else {
@@ -367,7 +367,7 @@ Function Get-VitalInformation {
     }
 
     if ($Tasks['WindowsUpdates']) {
-        if (Get-Module -Name PSWindowsUpdate -ListAvailable) {
+        if (Get-Module -Name PSWindowsUpdate -ListAvailable -Verbose:$false) {
             Write-Progress @WriteProgressParams -Status 'Retrieving Windows updates' -PercentComplete ($TasksDone / $TasksTotal * 100)
             $WindowsUpdates = Get-WindowsUpdate @WUParameters
 
@@ -539,7 +539,7 @@ Function Invoke-VitalChecks {
     }
 
     if ($Tasks['FileSystemScans']) {
-        if (Get-Module -Name Storage -ListAvailable) {
+        if (Get-Module -Name Storage -ListAvailable -Verbose:$false) {
             Write-Progress @WriteProgressParams -Status 'Running file system scans' -PercentComplete ($TasksDone / $TasksTotal * 100)
             if ($VerifyOnly) {
                 $VitalChecks.FileSystemScans = Invoke-CHKDSK -Operation Verify
@@ -759,7 +759,7 @@ Function Invoke-VitalMaintenance {
 
     if ($Tasks['WindowsUpdates']) {
         try {
-            Import-Module -Name PSWindowsUpdate -ErrorAction Stop
+            Import-Module -Name PSWindowsUpdate -ErrorAction Stop -Verbose:$false
         } catch [IO.FileNotFoundException] {
             Write-Warning -Message 'Unable to install Windows updates as PSWindowsUpdate module not available.'
             $VitalMaintenance.WindowsUpdates = $false
