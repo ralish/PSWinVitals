@@ -197,13 +197,13 @@ Function Get-VitalInformation {
 
     if (!(Test-IsAdministrator)) {
         $AdminTasks = 'ComponentStoreAnalysis', 'CrashDumps', 'WindowsUpdates'
-        $SelectedAdminTasks = New-Object -TypeName 'Collections.ArrayList'
+        $SelectedAdminTasks = New-Object -TypeName 'Collections.Generic.List[String]'
 
         if ($PSCmdlet.ParameterSetName -eq 'OptOut') {
             foreach ($AdminTask in $AdminTasks) {
                 if ($Tasks[$AdminTask]) {
                     $Tasks[$AdminTask] = $false
-                    $null = $SelectedAdminTasks.Add($AdminTask)
+                    $SelectedAdminTasks.Add($AdminTask)
                 }
             }
 
@@ -213,7 +213,7 @@ Function Get-VitalInformation {
         } else {
             foreach ($AdminTask in $AdminTasks) {
                 if ($Tasks[$AdminTask]) {
-                    $null = $SelectedAdminTasks.Add($AdminTask)
+                    $SelectedAdminTasks.Add($AdminTask)
                 }
             }
 
@@ -372,9 +372,9 @@ Function Get-VitalInformation {
             $WindowsUpdates = Get-WindowsUpdate @WUParameters
 
             if ($null -ne $WindowsUpdates -and $WindowsUpdates.Count -gt 0) {
-                $VitalInformation.WindowsUpdates = New-Object -TypeName 'Collections.ArrayList' -ArgumentList @(, $WindowsUpdates)
+                $VitalInformation.WindowsUpdates = [Array]$WindowsUpdates
             } else {
-                $VitalInformation.WindowsUpdates = New-Object -TypeName 'Collections.ArrayList'
+                $VitalInformation.WindowsUpdates = @()
             }
         } else {
             Write-Warning -Message 'Unable to retrieve Windows updates as PSWindowsUpdate module not available.'
@@ -770,9 +770,9 @@ Function Invoke-VitalMaintenance {
             $WindowsUpdates = Install-WindowsUpdate -IgnoreReboot -AcceptAll @WUParameters
 
             if ($null -ne $WindowsUpdates -and $WindowsUpdates.Count -gt 0) {
-                $VitalMaintenance.WindowsUpdates = New-Object -TypeName 'Collections.ArrayList' -ArgumentList @(, $WindowsUpdates)
+                $VitalMaintenance.WindowsUpdates = [Array]$WindowsUpdates
             } else {
-                $VitalMaintenance.WindowsUpdates = New-Object -TypeName 'Collections.ArrayList'
+                $VitalMaintenance.WindowsUpdates = @()
             }
         }
 
@@ -945,8 +945,6 @@ Function Get-InstalledPrograms {
 
     Add-NativeMethods
 
-    $InstalledPrograms = New-Object -TypeName 'Collections.ArrayList'
-
     # Programs installed system-wide in native bitness
     $ComputerNativeRegPath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
     # Programs installed system-wide under the 32-bit emulation layer (64-bit Windows only)
@@ -959,6 +957,7 @@ Function Get-InstalledPrograms {
     }
 
     # Filter out all the uninteresting installations
+    $InstalledPrograms = New-Object -TypeName 'Collections.Generic.List[PSCustomObject]]'
     foreach ($UninstallKey in $UninstallKeys) {
         $Program = Get-ItemProperty -Path $UninstallKey.PSPath
 
@@ -1045,10 +1044,10 @@ Function Get-InstalledPrograms {
             $InstalledProgram.Uninstall = $Program.UninstallString
         }
 
-        $null = $InstalledPrograms.Add($InstalledProgram)
+        $InstalledPrograms.Add($InstalledProgram)
     }
 
-    return , @($InstalledPrograms | Sort-Object -Property Name)
+    return , @($InstalledPrograms.ToArray() | Sort-Object -Property Name)
 }
 
 Function Get-KernelCrashDumps {
@@ -1102,13 +1101,13 @@ Function Get-ServiceCrashDumps {
     Param()
 
     $LogPrefix = 'ServiceCrashDumps'
-    $ServiceCrashDumps = New-Object -TypeName 'Collections.ArrayList'
+    $ServiceCrashDumps = New-Object -TypeName 'Collections.Generic.List[PSCustomObject]'
 
-    $null = $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-18' -Name 'LocalSystem' -LogPrefix $LogPrefix))
-    $null = $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-19' -Name 'LocalService' -LogPrefix $LogPrefix))
-    $null = $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-20' -Name 'NetworkService' -LogPrefix $LogPrefix))
+    $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-18' -Name 'LocalSystem' -LogPrefix $LogPrefix))
+    $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-19' -Name 'LocalService' -LogPrefix $LogPrefix))
+    $ServiceCrashDumps.Add((Get-UserProfileCrashDumps -Sid 'S-1-5-20' -Name 'NetworkService' -LogPrefix $LogPrefix))
 
-    return $ServiceCrashDumps
+    return , $ServiceCrashDumps.ToArray()
 }
 
 Function Get-UserCrashDumps {
@@ -1117,15 +1116,15 @@ Function Get-UserCrashDumps {
     Param()
 
     $LogPrefix = 'UserCrashDumps'
-    $UserCrashDumps = New-Object -TypeName 'Collections.ArrayList'
+    $UserCrashDumps = New-Object -TypeName 'Collections.Generic.List[PSCustomObject]'
 
     $ProfileList = Get-Item -Path 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\ProfileList'
     $UserSids = $ProfileList.GetSubKeyNames() | Where-Object { $_ -match '^S-1-5-21-' }
     foreach ($UserSid in $UserSids) {
-        $null = $UserCrashDumps.Add((Get-UserProfileCrashDumps -Sid $UserSid -LogPrefix $LogPrefix))
+        $UserCrashDumps.Add((Get-UserProfileCrashDumps -Sid $UserSid -LogPrefix $LogPrefix))
     }
 
-    return , @($UserCrashDumps)
+    return , $UserCrashDumps.ToArray()
 }
 
 Function Get-UserProfileCrashDumps {
@@ -1200,7 +1199,7 @@ Function Invoke-CHKDSK {
 
     $Volumes = Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.FileSystem -in $SupportedFileSystems }
 
-    $Results = New-Object -TypeName 'Collections.ArrayList'
+    $Results = New-Object -TypeName 'Collections.Generic.List[PSCustomObject]'
     foreach ($Volume in $Volumes) {
         $VolumePath = $Volume.Path.TrimEnd('\')
 
@@ -1238,10 +1237,10 @@ Function Invoke-CHKDSK {
             default { Write-Error -Message ('[{0}] Unexpected exit code: {1}' -f $LogPrefix, $CHKDSK.ExitCode) }
         }
 
-        $null = $Results.Add($CHKDSK)
+        $Results.Add($CHKDSK)
     }
 
-    return , @($Results)
+    return , $Results.ToArray()
 }
 
 Function Invoke-DISM {
