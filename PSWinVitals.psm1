@@ -1537,7 +1537,7 @@ Function Expand-ZipFile {
 
 Function Get-WindowsProductType {
     [CmdletBinding()]
-    [OutputType([UInt])]
+    [OutputType([UInt32])]
     Param()
 
     return (Get-CimInstance -ClassName 'Win32_OperatingSystem' -Verbose:$false).ProductType
