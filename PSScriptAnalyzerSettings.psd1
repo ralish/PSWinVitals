@@ -11,7 +11,7 @@
         PSUseCompatibleSyntax      = @{
             Enable         = $true
             # Only major versions from v3.0 are supported
-            TargetVersions = @('4.0', '5.0')
+            TargetVersions = @('4.0', '5.0', '6.0', '7.0')
         }
 
         # General rules
