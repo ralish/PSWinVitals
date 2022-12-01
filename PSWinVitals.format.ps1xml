@@ -54,11 +54,19 @@
                             </ListItem>
                             <ListItem>
                                 <Label>Service</Label>
-                                <ScriptBlock>return '{0} dump(s)' -f $_.Service.CrashDumps.Count</ScriptBlock>
+                                <ScriptBlock>
+                                    $CrashDumps = 0
+                                    foreach ($Service in $_.Service) { $CrashDumps += $Service.CrashDumps.Count }
+                                    return '{0} dump(s)' -f $CrashDumps
+                                </ScriptBlock>
                             </ListItem>
                             <ListItem>
                                 <Label>User</Label>
-                                <ScriptBlock>return '{0} dump(s)' -f $_.User.CrashDumps.Count</ScriptBlock>
+                                <ScriptBlock>
+                                    $CrashDumps = 0
+                                    foreach ($User in $_.User) { $CrashDumps += $User.CrashDumps.Count }
+                                    return '{0} dump(s)' -f $CrashDumps
+                                </ScriptBlock>
                             </ListItem>
                         </ListItems>
                     </ListEntry>
@@ -326,12 +334,13 @@
                                     if ($null -eq $_.CrashDumps) { return 'Skipped' }
 
                                     $KernelDumps = $_.CrashDumps.Kernel.Minidumps.Count
-                                    if ($_.CrashDumps.Kernel.MemoryDump) {
-                                        $KernelDumps++
-                                    }
+                                    if ($_.CrashDumps.Kernel.MemoryDump) { $KernelDumps++ }
 
-                                    $ServiceDumps = $_.CrashDumps.Service.CrashDumps.Count
-                                    $UserDumps = $_.CrashDumps.User.CrashDumps.Count
+                                    $ServiceDumps = 0
+                                    foreach ($Service in $_.CrashDumps.Service) { $ServiceDumps += $Service.CrashDumps.Count }
+
+                                    $UserDumps = 0
+                                    foreach ($User in $_.CrashDumps.User) { $UserDumps += $User.CrashDumps.Count }
 
                                     return '{0} kernel dump(s), {1} service dump(s), {2} user dump(s)' -f $KernelDumps, $ServiceDumps, $UserDumps
                                 </ScriptBlock>
