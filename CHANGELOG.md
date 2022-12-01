@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.6.8
+------
+
+- Fix incorrect count of crash dumps in type formatting
+
 v0.6.7
 ------
 
