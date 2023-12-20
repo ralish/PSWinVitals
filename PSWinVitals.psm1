@@ -962,7 +962,7 @@ Function Get-InstalledPrograms {
     }
 
     # Filter out all the uninteresting installations
-    $InstalledPrograms = New-Object -TypeName 'Collections.Generic.List[PSCustomObject]]'
+    $InstalledPrograms = New-Object -TypeName 'Collections.Generic.List[PSCustomObject]'
     foreach ($UninstallKey in $UninstallKeys) {
         $Program = Get-ItemProperty -Path $UninstallKey.PSPath
 
