@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.6.9
+------
+
+- `Get-InstalledPrograms`: Fix invalid syntax (affects PowerShell 7.4)
+
 v0.6.8
 ------
 
