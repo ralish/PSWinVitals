@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.7.0
+------
+
+- `Invoke-VitalMaintenance`: Add support for running NGEN with new `DotNetQueuedItems` task
+
 v0.6.9
 ------
 
