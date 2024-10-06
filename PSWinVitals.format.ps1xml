@@ -173,6 +173,40 @@
             </TableControl>
         </View>
         <View>
+            <Name>PSWinVitals.NGEN</Name>
+            <ViewSelectedBy>
+                <TypeName>PSWinVitals.NGEN</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader />
+                    <TableColumnHeader>
+                        <Label>Output</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader />
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem>
+                                <PropertyName>Name</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <ScriptBlock>
+                                    if ($_.Output.Count -eq 0) { return 'No output' }
+                                    if ($_.Output.Count -eq 1) { return $_.Output }
+                                    return '{0} lines' -f $_.Output.Count
+                                </ScriptBlock>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>ExitCode</PropertyName>
+                            </TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+        <View>
             <Name>PSWinVitals.SFC</Name>
             <ViewSelectedBy>
                 <TypeName>PSWinVitals.SFC</TypeName>
@@ -426,6 +460,13 @@
                                     if ($null -eq $_.ComponentStoreCleanup) { return 'Skipped' }
                                     if ($_.ComponentStoreCleanup.ExitCode -eq 0) { return 'Completed' }
                                     return 'Error (RC: {0})' -f $_.ComponentStoreCleanup.ExitCode
+                                </ScriptBlock>
+                            </ListItem>
+                            <ListItem>
+                                <Label>DotNetQueuedItems</Label>
+                                <ScriptBlock>
+                                    if ($null -eq $_.DotNetQueuedItems) { return 'Skipped' }
+                                    return 'Invoked for {0} .NET Framework runtimes' -f $_.DotNetQueuedItems.Count
                                 </ScriptBlock>
                             </ListItem>
                             <ListItem>

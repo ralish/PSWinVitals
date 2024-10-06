@@ -594,6 +594,11 @@ Function Invoke-VitalMaintenance {
 
           This task requires administrator privileges.
 
+        - DotNetQueuedItems
+          Executes queued compilation jobs for all installed .NET Framework versions.
+
+          This task requires administrator privileges.
+
         - DeleteErrorReports
           Deletes all error reports (queued & archived) for the system and user.
 
@@ -664,6 +669,7 @@ Function Invoke-VitalMaintenance {
         Selected maintenance tasks are run in the following order:
         - WindowsUpdates
         - ComponentStoreCleanup
+        - DotNetQueuedItems
         - PowerShellHelp
         - SysinternalsSuite
         - ClearInternetExplorerCache
@@ -684,6 +690,7 @@ Function Invoke-VitalMaintenance {
             'ClearInternetExplorerCache',
             'DeleteErrorReports',
             'DeleteTemporaryFiles',
+            'DotNetQueuedItems',
             'EmptyRecycleBin',
             'PowerShellHelp',
             'SysinternalsSuite',
@@ -697,6 +704,7 @@ Function Invoke-VitalMaintenance {
             'ClearInternetExplorerCache',
             'DeleteErrorReports',
             'DeleteTemporaryFiles',
+            'DotNetQueuedItems',
             'EmptyRecycleBin',
             'PowerShellHelp',
             'SysinternalsSuite',
@@ -717,6 +725,7 @@ Function Invoke-VitalMaintenance {
         ComponentStoreCleanup      = $null
         DeleteErrorReports         = $null
         DeleteTemporaryFiles       = $null
+        DotNetQueuedItems          = $null
         EmptyRecycleBin            = $null
         PowerShellHelp             = $null
         SysinternalsSuite          = $null
@@ -749,6 +758,7 @@ Function Invoke-VitalMaintenance {
         ComponentStoreCleanup      = $null
         DeleteErrorReports         = $null
         DeleteTemporaryFiles       = $null
+        DotNetQueuedItems          = $null
         EmptyRecycleBin            = $null
         PowerShellHelp             = $null
         SysinternalsSuite          = $null
@@ -785,6 +795,12 @@ Function Invoke-VitalMaintenance {
     if ($Tasks['ComponentStoreCleanup']) {
         Write-Progress @WriteProgressParams -Status 'Running component store clean-up' -PercentComplete ($TasksDone / $TasksTotal * 100)
         $VitalMaintenance.ComponentStoreCleanup = Invoke-DISM -Operation StartComponentCleanup
+        $TasksDone++
+    }
+
+    if ($Tasks['DotNetQueuedItems']) {
+        Write-Progress @WriteProgressParams -Status 'Running .NET Framework queued compilation jobs' -PercentComplete ($TasksDone / $TasksTotal * 100)
+        $VitalMaintenance.DotNetQueuedItems = Invoke-NGEN
         $TasksDone++
     }
 
@@ -1234,9 +1250,9 @@ Function Invoke-CHKDSK {
         Write-Verbose -Message ('[{0}] Running {1} operation on: {2}' -f $LogPrefix, $Operation.ToLower(), $VolumePath)
         $ChkDskPath = Join-Path -Path $env:SystemRoot -ChildPath 'System32\chkdsk.exe'
         if ($Operation -eq 'Scan') {
-            $CHKDSK.Output += & $ChkDskPath $VolumePath /scan
+            $CHKDSK.Output = & $ChkDskPath $VolumePath /scan
         } else {
-            $CHKDSK.Output += & $ChkDskPath $VolumePath
+            $CHKDSK.Output = & $ChkDskPath $VolumePath
         }
         $CHKDSK.ExitCode = $LASTEXITCODE
 
@@ -1285,6 +1301,59 @@ Function Invoke-DISM {
     }
 
     return $DISM
+}
+
+Function Invoke-NGEN {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject[]])]
+    Param()
+
+    $LogPrefix = 'NGEN'
+    $Versions = @('v2.0.50727', 'v4.0.30319')
+
+    $Architectures = @('Framework')
+    if (Test-IsWindows64bit) {
+        $Architectures += @('Framework64')
+    }
+
+    $Frameworks = New-Object -TypeName 'Collections.Generic.List[PSCustomObject]'
+    foreach ($Version in $Versions) {
+        foreach ($Architecture in $Architectures) {
+            $NgenPath = Join-Path -Path $env:windir -ChildPath ('Microsoft.NET\{0}\{1}\ngen.exe' -f $Architecture, $Version)
+            if (!(Test-Path -LiteralPath $NgenPath -PathType Leaf)) {
+                continue
+            }
+
+            $Framework = [PSCustomObject]@{
+                Name     = ('.NET Framework {0}' -f $Version.Substring(0, 4))
+                NgenPath = $NgenPath
+                Output   = $null
+                ExitCode = $null
+            }
+
+            if ($Architecture -eq 'Framework64') {
+                $Framework.Name += ' (x64)'
+            } else {
+                $Framework.Name += ' (x86)'
+            }
+
+            $Framework.PSObject.TypeNames.Insert(0, 'PSWinVitals.NGEN')
+            $Frameworks.Add($Framework)
+        }
+    }
+
+    foreach ($Framework in $Frameworks) {
+        Write-Verbose -Message ('[{0}] Running for {1} ...' -f $LogPrefix, $Framework.Name)
+        $Framework.Output = @(& $Framework.NgenPath executeQueuedItems /nologo)
+        $Framework.ExitCode = $LASTEXITCODE
+
+        switch ($Framework.ExitCode) {
+            0 { continue }
+            default { Write-Error -Message ('[{0}] Running for {1} returned non-zero exit code: {2}' -f $LogPrefix, , $Framework.Name, $Framework.ExitCode) }
+        }
+    }
+
+    return $Frameworks
 }
 
 Function Invoke-SFC {

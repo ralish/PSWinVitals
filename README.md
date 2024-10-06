@@ -77,6 +77,7 @@ The module exports three functions which handle inventory retrieval, health chec
 
 - Install all available Windows updates
 - Perform Windows component store clean-up
+- Executes queued .NET Framework compilation jobs
 - Update help for all PowerShell modules
 - Install latest Sysinternals Suite tools
 - Clear Internet Explorer cache
